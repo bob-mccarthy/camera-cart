@@ -1,43 +1,50 @@
 import math
 import numpy as np
 
+def find_acute_angle(u, v):
+  
+    
+  #angle between two vectors
+  # acos(dot_prod(u,v)/ ||u||*||v||)
+  magU = math.sqrt(u[0] ** 2 + u[1] ** 2)
+  magV = math.sqrt(v[0] ** 2 + v[1] ** 2)
+
+  dot_prod = u[0]*v[0] + u[1]*v[1]
+  # Calculate the angle between the two vector in radians
+  angle = math.acos(dot_prod/(magU*magV))
+  return angle
+   
 def find_angle(x1, y1, x2, y2,x3,y3):
-      #u and v are two vectors that share the point (x2, y2)
-      # as the lines made by the 3 points
-      # the calculations below assume the up is positive y
-      # so multiply the y value by negative one because on the GUI
-      # down in positive
-      u = (x1-x2, (y1-y2) * -1)
-      v = (x3-x2, (y3-y2) * -1)
-      
-      #angle between two vectors
-      # acos(dot_prod(u,v)/ ||u||*||v||)
-      magU = math.sqrt(u[0] ** 2 + u[1] ** 2)
-      magV = math.sqrt(v[0] ** 2 + v[1] ** 2)
+  #u and v are two vectors that share the point (x2, y2)
+  # as the lines made by the 3 points
+  # the calculations below assume the up is positive y
+  # so multiply the y value by negative one because on the GUI
+  # down in positive
+  u = (x1-x2, (y1-y2) * -1)
+  v = (x3-x2, (y3-y2) * -1)
+  #finds the angle between the two vectors
+  angle = find_acute_angle(u,v)
 
-      dot_prod = u[0]*v[0] + u[1]*v[1]
-      print((x1, y1), (x2, y2), (x3,y3))
-      print(u,v)
-      # Calculate the angle between the two vector in radians
-      angle = math.acos(dot_prod/(magU*magV))
+  #after finding the angle between the two vectors we then need
+  #to find out what angle the robot need to turn 
 
 
-      #checking if we need to CW or CCW
-      #by checking if v is over the line defined by u (if so multiply by -1 otherwise 1)
-      # and also checking if the cart is moving backwards (backwards means that u[0] > 0) 
-      #   as that means the x component of the first vector u pointed in the negative direction
-      # and if so multiply by -1
-      #then multiply those numbers to get to figure out where to turn the robot CW or CCW
-      mConstant = 1
-      if u[0] != 0:
-        mConstant = (1 if ((u[1]/u[0])*v[0] > v[1]) else -1) * (-1 if (u[0] > 0) else 1)
-      #if u is vertical turn CW if x component of v is greater than x component of u
-      # however that is flipped if vector v is going downwards 
-      # (downwards means (y component of u is positive) u[1] > 0)
-      else:
-         mConstant = (1 if (v[0] > u[0]) else -1) * (-1 if (u[1] > 0) else 1)
+  #checking if we need to CW or CCW
+  #by checking if v is over the line defined by u (if so multiply by -1 otherwise 1)
+  # and also checking if the cart is moving backwards (backwards means that u[0] > 0) 
+  #   as that means the x component of the first vector u pointed in the negative direction
+  # and if so multiply by -1
+  #then multiply those numbers to get to figure out where to turn the robot CW or CCW
+  mConstant = 1
+  if u[0] != 0:
+    mConstant = (1 if ((u[1]/u[0])*v[0] > v[1]) else -1) * (-1 if (u[0] > 0) else 1)
+  #if u is vertical turn CW if x component of v is greater than x component of u
+  # however that is flipped if vector v is going downwards 
+  # (downwards means (y component of u is positive) u[1] > 0)
+  else:
+      mConstant = (1 if (v[0] > u[0]) else -1) * (-1 if (u[1] > 0) else 1)
 
-      return (180 - round(math.degrees(angle),2)) * mConstant
+  return (180 - round(math.degrees(angle),2)) * mConstant
 
 def processPoints(xLst, yLst, scale):
   moveInstructions = []
@@ -51,6 +58,7 @@ def processPoints(xLst, yLst, scale):
       moveInstructions.append(find_angle(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2]))   
       modeInstructions.append(1)
   return (moveInstructions, modeInstructions)   
+
 
 def rotateVector(u, angle):
   x, y = u
@@ -74,8 +82,122 @@ def rotateTriangle(A, B, C, angleDegrees, cX, cY):
     translatedArray = rotatedTriangle + np.array([cX, cY])
 
     return translatedArray.astype(int).tolist()
-   
+
+#returns the speed of the slower for the motor turn in an arc 
+#given the speed of the radius of the turn, the axle length of the cart,
+#the acceleration of the cart, the speed of the faster motor, degrees of the turn
+def calculateArcSpeed(radius, axleLength, accel, baseSpeed, degrees):
+  mmToSteps = 3200/(80*math.pi)
+  C = (2 * radius)/axleLength
+  ratio = ((C-1)/(C+1))
+  print(ratio)
+  print(f'average speed {ratio*baseSpeed}')
+  fasterSteps = ((2*math.pi*(radius+axleLength/2))) * (degrees/360) * mmToSteps
+  print(f'fasterSteps {fasterSteps}')
+  totalTime = fasterSteps/baseSpeed
+  print(f'totalTime: {totalTime}')
+  L = min(np.roots([accel/totalTime, -accel, baseSpeed - baseSpeed*ratio]))
+  print(f'L: {L}')
+  accelTime = totalTime - L
+  print(f'accelTime {accelTime * 1000000}')
+  slowerSpeed = baseSpeed - (accel* L)
+  print(f'slowerSpeed {slowerSpeed}')
+  print(f'slowerSteps {ratio*baseSpeed*totalTime}')
+
+def isColinear(u, v):
+  if u[0] != 0:
+    # print((v[0]/u[0]) * u[1], v[1])
+    return round((v[0]/u[0]) * u[1],5) == v[1]
+  elif u[1] != 0:
+    return round((v[1]/u[1]) * u[0], 5) == v[0]
+  else:
+    return False 
   
+def findArcInLines(u, v, r):
+  angle = find_acute_angle(u,v)
+  s = r/(math.sin(angle/2))
+
+  magU = math.sqrt(u[0] ** 2 + u[1] ** 2)
+
+  #determine whether the vector needs to be rotated CW or CCW
+
+  mConstant = 1
+  #if u is not a vertical line than what we check is
+  # check if vector v is below the line defined by u and multiply by -1
+  # also check if the vector u is going backwards and if so mulitply by -1
+  # the result number is the sign of the angle we should turn 
+  if u[0] != 0:
+    mConstant = (-1 if ((u[1]/u[0])*v[0] > v[1]) else 1) * (-1 if (u[0] > 0) else 1)
+  #if u is a vertical line than what we check is
+  # if u is to the right of v (v[0] > u[0])
+  # if u is going downward (u[1] > 0]) then -1 
+  else:
+    mConstant = (-1 if (v[0] > u[0]) else 1) * (-1 if (u[1] > 0) else 1)
+
+
+  #get vector along u that is of length s and rotate it by angle/2
+  circleCenter = rotateVector([(v[0]/magU) * s, (v[1]/magU) * s], mConstant* math.degrees(angle/2))
+
+  #vector perpendicular to u with magnitude r
+  pU = [1, -u[0]/u[1]] if u[1] != 0 else [0, 1]
+  magPU = math.sqrt(pU[0] ** 2 + pU[1] ** 2)
+  pU = [(pU[0]/magPU) * r, (pU[1]/magPU) * r]
+
+  #vector perpendicular to v with magnitude r
+  pV = [1, -v[0]/v[1]] if v[1] != 0 else [0,1]
+  magPV = math.sqrt(pV[0] ** 2 + pV[1] ** 2)
+  pV = [(pV[0]/magPV) * r, (pV[1]/magPV) * r]
+
+  #you go take the circle center and move along the vector that is perpendicular to u
+  # one of these vectors should be line on u and be the point where the circle is tangent
+  # to the line
+  tmpU1 = [circleCenter[0] - pU[0] , circleCenter[1] - pU[1]]
+  tmpU2 = [circleCenter[0] + pU[0] , circleCenter[1] + pU[1]]
+
+  #same concept as above, but with v
+  tmpV1 = [circleCenter[0] - pV[0] , circleCenter[1] - pV[1]]
+  tmpV2 = [circleCenter[0] + pV[0] , circleCenter[1] + pV[1]]
+
+  #find the point the two vectors that are colinear to u and v
+  #the resulting points are where the circle is tangent to the lines 
+  tanU = tmpU1 if isColinear(tmpU1, u) else tmpU2
+  tanV = tmpV1 if isColinear(tmpV1, v) else tmpV2
+
+  print(tanU, tanV)
+
+  dist = math.sqrt((tanU[0] - tanV[0]) ** 2 + (tanU[1] - tanV[1]) ** 2)
+  #find the angle, in degrees, between tanU and tanV using law of cosines
+  theta = math.degrees(math.acos(1 - (dist**2/(2*r**2))))
+  print(tanU, circleCenter)
+
+  #find the angle of rotation need to get to point tanU and tanV
+  # check if the point is directly above or below the center and if so it is a 90 or -90 degree turn
+  thetaU = math.atan((tanU[1] - circleCenter[1])/(tanU[0] - circleCenter[0])) if tanU[0] != circleCenter[0] else (90 if tanU[1] > circleCenter[1] else -90)
+  thetaV = math.atan((tanV[1] - circleCenter[1])/(tanV[0] - circleCenter[0])) if tanV[0] != circleCenter[0] else (90 if tanV[1] > circleCenter[1] else -90)
+
+  #transform negative rotations to their first positve counterpart
+  if thetaU < 0:
+    thetaU += 360
+  if thetaV < 0:
+    thetaV += 360
+  #90 degrees of rotation as the start and -90 degrees as the end
+  # you take a right turn if tanV comes after tanU on the circle
+  isRight = thetaU < thetaV
+  print(thetaU, thetaV)
+  print(theta)
+  print(isRight)
+
+   
+    
+# calculateArcSpeed(250, 290, 2000, 1000, 90)
+# calculateArcSpeed(500, 290, 2000, 2000, 90)
+# calculateArcSpeed(500, 290, 2000, 2000, 90)
+# calculateArcSpeed(1000, 290, 2000, 1000, 90)
+
+
+findArcInLines([-100,100], [-100,-100], 10)
+findArcInLines([100,-100], [100,100], 10)
+findArcInLines([100,0], [0,100], 10)
 
 xLst = [0, 1, 1,0]
 yLst = [0, 0, 1,1]
