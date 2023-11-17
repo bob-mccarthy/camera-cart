@@ -2,7 +2,7 @@ import serial
 import serial.tools.list_ports
 import json
 import time
-from utils import processPoints
+from utils import processPointsNoStops
 import threading
 
 class Communication:
@@ -18,7 +18,7 @@ class Communication:
         
     def sendDirection(self, direction, magnitude):
         #converts directions to the sign that the movement should have as well as what mode the cart has to be in
-        directionsToNums = {"Up": (1,5), "Down": (-1,5), "Left" : (-1,6), "Right": (1,6)}
+        directionsToNums = {"Up": (1,8), "Down": (-1,8), "Left" : (-1,9), "Right": (1,9)}
         #  print(f'Sending {directionsToNums[direction]}')
         message = {
             "numInstructions" : 1,
@@ -33,7 +33,7 @@ class Communication:
         #converts message from a string to a bytes to write to the serial monitor
         self.connectedDevice.write(bytes(jsonMessage + "\n", 'utf-8'))
     def sendPoints(self, xLst, yLst, scale):
-        moveInstructions, modeInstructions = processPoints(xLst, yLst, scale)
+        moveInstructions, modeInstructions = processPointsNoStops(xLst, yLst, scale)
         print(moveInstructions, modeInstructions)
         message = {
         "numInstructions" : len(moveInstructions),
