@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt, patches
 import math
-from utils import findArcInLines
+from line import findArc
 import random
 #steps in a rotation
 stepsPerRot = 3200
@@ -17,14 +17,17 @@ def makePlot(xLst, yLst, circleCenters, radius):
     circle1 = patches.Circle((h, k), radius=radius, color='green')
     ax.add_patch(circle1)
   plt.plot(xLst, yLst, 'bo', linestyle="--")
+  # plt.plot(10000, 2757.3593128807133, 'ro')
+  # plt.plot(15121.320343559642, 4878.679656440356, 'ro')
   ax.axis('equal')
   ax.autoscale_view()
-  ax.set_xlim([0, 50000])
-  ax.set_ylim([-100000, 100000])
+  ax.set_xlim([0, 30000])
+  ax.set_ylim([-10000, 30000])
   plt.show()
-xLst = [random.random() * 50000 for _ in range(3)]
-yLst = [random.random() * 50000 for _ in range(3)]
-print(xLst, yLst)
-circleCenters = findArcInLines(xLst[0], yLst[0], xLst[1], yLst[1], xLst[2], yLst[2], 400 * mmToSteps)
-print(circleCenters)
-makePlot(xLst,yLst, circleCenters,400 * mmToSteps)
+
+# xLst = [10000, 10000, 20000]
+# yLst = [0, 10000, 20000] 
+# print(xLst, yLst)
+# circleCenters = [findArc(xLst[0], yLst[0], xLst[1] ,yLst[1] , xLst[2], yLst[2], 3000)]
+# print(circleCenters)
+# makePlot(xLst,yLst, circleCenters,3000)

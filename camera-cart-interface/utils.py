@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from line import Line
 
 #steps in a rotation
 stepsPerRot = 3200
@@ -83,7 +84,7 @@ def processPointsNoStops(xLst, yLst, scale):
   xLst = [x * scale for x in xLst ]
   yLst = [y * scale * -1 for y in yLst]
   print(f'points x, y: {xLst, yLst}')
-  turnRadius = 500
+  turnRadius = 500 * mmToSteps
   moveInstructions = []
   modeInstructions = []
   lastX, lastY = xLst[0], yLst[0]
@@ -91,7 +92,7 @@ def processPointsNoStops(xLst, yLst, scale):
     
     if i < len(xLst) - 2:
       # print(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2])
-      tanU, tanV, theta, isRight = findArcInLines(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
+      tanU, tanV, theta, isRight = findArc(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
       slowerSpeed, accelTime, slowerSteps, fasterSteps = calculateArcSpeed(turnRadius, axleLength, acceleration, baseSpeed, theta)
       # print(f'tanU: {tanU}')
       # print(f'tanV: {tanV}')
@@ -176,123 +177,103 @@ def isColinear(u, v):
     return True 
   
 
-#given three points that represent two intersecting vectors and the radius a circle, in millimeters 
-# it returns the two points on the line that are tangent to the
-# circle of radius r, the degrees of the turn and whether 
-# you need to go right or left
-def findArcInLines(x1, y1, x2, y2, x3, y3, r):
-  #convert radius to steps
-  r *= mmToSteps
+#find the arc which is tangent to the two line segments defined by 
+#the 3 points input into the function with a radius of r
+def findArc(x1, y1, x2, y2, x3, y3, r):
 
-  #u and v are two vectors that share the point (x2, y2)
-  # as the lines made by the 3 points
-  # the calculations below assume the up is positive y
-  # so multiply the y value by negative one because on the GUI
-  # down in positive
-  u = (x1-x2, (y1-y2))
-  v = (x3-x2, (y3-y2))
+  l1 = Line([x1, y1],[x2, y2])
+  l2 = Line([x2, y2], [x3, y3])
 
-  angle = find_acute_angle(u,v)
-  s = r/(math.sin(angle/2))
-
-  magU = math.sqrt(u[0] ** 2 + u[1] ** 2)
-
-  #determine whether the vector needs to be rotated CW or CCW
-
-  mConstant = 1
-  #if u is not a vertical line than what we check is
-  # check if vector v is below the line defined by u and multiply by -1
-  # also check if the vector u is going backwards and if so mulitply by -1
-  # the result number is the sign of the angle we should turn 
-  if u[0] != 0:
-    mConstant = (-1 if ((u[1]/u[0])*v[0] > v[1]) else 1) * (-1 if (u[0] > 0) else 1)
-  #if u is a vertical line than what we check is
-  # if u is to the right of v (v[0] > u[0])
-  # if u is going downward (u[1] > 0]) then -1 
+  l1Offset1 = l1.offset(r)
+  l1Offset2 = l1.offset(-r)
+  
+  #offset line 1 by radius units, and we pick the line which is closer to l2
+  l1Offset = None
+  if l1.isVertical:
+    #if l1 is vertical we pick the line whose x value is closer the x value of 
+    #point 2 on l2 (which is the point that l1 and l2 do not have in common)
+    l1Offset = l1Offset2 if (abs(l2.p2[0] - l1Offset2.p1[0]) < 
+                            abs(l2.p2[0] - l1Offset1.p1[0])) else l1Offset1
   else:
-    mConstant = (-1 if (v[0] > u[0]) else 1) * (-1 if (u[1] > 0) else 1)
+    #if l1 is a function than we plug the x value of point 2 for line 2 into
+    #each of the potential offset lines and we pick the line whose y value is closer to
+    #line 2 point 2's y value
+    l1Offset = l1Offset2 if (abs(l1Offset2.f(l2.p2[0]) - l2.p2[1]) < 
+                            abs(l1Offset1.f(l2.p2[0]) - l2.p2[1])) else l1Offset1
+  
+  l2Offset1 = l2.offset(r)
+  l2Offset2 = l2.offset(-r)
 
-  print(f'u,v: {u,v}')
-  #get vector along u that is of length s and rotate it by angle/2
-  circleCenter = rotateVector([(v[0]/magU) * s, (v[1]/magU) * s], mConstant* math.degrees(angle/2))
-  print(f'Circle Center: {(circleCenter[0], circleCenter[1])}')
+  #offset line 2 by radius units, and we pick the line which is closer to l1
+  l2Offset = None
+  if l2.isVertical:
+    #if l2 is vertical we pick the line whose x value is closer the x value of 
+    #point 1 on l2 (which is the point that l1 and l2 do not have in common)
+    l2Offset = l2Offset2 if (abs(l1.p1[0] - l2Offset2.p1[0]) < 
+                            abs(l1.p1[0] - l2Offset1.p1[0])) else l2Offset1
+  else:
+    #if l2 is a function than we plug the x value of point 1 for line 1 into
+    #each of the potential offset lines and we pick the line whose y value is closer to
+    #line 1 point 1's y value
+    l2Offset = l2Offset2 if (abs((l2Offset2.f(l1.p1[0]) - l1.p1[1])) < 
+                            abs((l2Offset1.f(l1.p1[0]) - l1.p1[1]))) else l2Offset1
 
-  #vector perpendicular to u with magnitude r
-  pU = [1, -u[0]/u[1]] if u[1] != 0 else [0, 1]
-  magPU = math.sqrt(pU[0] ** 2 + pU[1] ** 2)
-  pU = [(pU[0]/magPU) * r, (pU[1]/magPU) * r]
+  center = l1Offset.intersect(l2Offset)
+  
+  l1v1 = l1.perpendicularVector(r)
+  l1v2 = l1.perpendicularVector(-r) 
 
-  #vector perpendicular to v with magnitude r
-  pV = [1, -v[0]/v[1]] if v[1] != 0 else [0,1]
-  magPV = math.sqrt(pV[0] ** 2 + pV[1] ** 2)
-  pV = [(pV[0]/magPV) * r, (pV[1]/magPV) * r]
+  SIG_FIGS = 3
+  #the point on l1 that is tangent to the circle is the point that lies on l1 since both points are 
+  #radius distance from the center of the circle 
+  tan1 = ([center[0] + l1v1[0], center[1] + l1v1[1]] 
+          if ((l1.isVertical and round(l1.p1[0],SIG_FIGS) == round((center[0] + l1v1[0]), SIG_FIGS)) or 
+              (not l1.isVertical and round(l1.f(l1v1[0] + center[0]), SIG_FIGS) == round(l1v1[1] + center[1], SIG_FIGS)))                                                       
+          else [center[0] + l1v2[0], center[1] + l1v2[1]])
 
+  l2v1 = l2.perpendicularVector(r)
+  l2v2 = l2.perpendicularVector(-r) 
 
+  #the point on l1 that is tangent to the circle is the point that lies on l2 since both points are 
+  #radius distance from the center of the circle.
+  tan2 = ([center[0] + l2v1[0], center[1] + l2v1[1]]  
+          if ((l2.isVertical and round(l2.p1[0],SIG_FIGS) == round((l2v1[0] + center[0]), SIG_FIGS)) or 
+             (not l2.isVertical and round(l2.f(l2v1[0] + center[0]), SIG_FIGS) == round(l2v1[1] + center[1], SIG_FIGS)))
+          else [center[0] + l2v2[0], center[1] + l2v2[1]])
 
-  #you go take the circle center and move along the vector that is perpendicular to u
-  # one of these vectors should be line on u and be the point where the circle is tangent
-  # to the line
-  tmpU1 = [circleCenter[0] - pU[0] , circleCenter[1] - pU[1]]
-  tmpU2 = [circleCenter[0] + pU[0] , circleCenter[1] + pU[1]]
+  dist = math.sqrt((tan1[0] - tan2[0]) ** 2 + (tan1[1] - tan2[1]) ** 2)
 
-
-  #same concept as above, but with v
-  tmpV1 = [circleCenter[0] - pV[0] , circleCenter[1] - pV[1]]
-  tmpV2 = [circleCenter[0] + pV[0] , circleCenter[1] + pV[1]]
-
-
-  #find the point the two vectors that are colinear to u and v
-  #the resulting points are where the circle is tangent to the lines 
-  tanU = tmpU1 if isColinear(tmpU1, u) else tmpU2
-  tanV = tmpV1 if isColinear(tmpV1, v) else tmpV2
-
-  dist = math.sqrt((tanU[0] - tanV[0]) ** 2 + (tanU[1] - tanV[1]) ** 2)
-  #find the angle, in degrees, between tanU and tanV using law of cosines
-  theta = math.degrees(math.acos(1 - (dist**2/(2*r**2))))
-
-
-  #find the angle of rotation need to get to point tanU and tanV
-  # check if the point is directly above or below the center and if so it is a 90 or -90 degree turn
-  thetaU = math.atan((tanU[1] - circleCenter[1])/(tanU[0] - circleCenter[0])) if tanU[0] != circleCenter[0] else (90 if tanU[1] > circleCenter[1] else -90)
-  thetaV = math.atan((tanV[1] - circleCenter[1])/(tanV[0] - circleCenter[0])) if tanV[0] != circleCenter[0] else (90 if tanV[1] > circleCenter[1] else -90)
-  # print(thetaU, thetaV)
-  thetaU += 90
-  thetaU += 90
-  # #transform negative rotations to their first positve counterpart
-  # if thetaU < 0:
-  #   thetaU = -thetaU + 90
-  # if thetaV < 0:
-  #   thetaV = -thetaV + 90
+  #find the angle, in degrees, between tan1 and tan2 using law of cosines
+  #as the center, tan1, and tan2 form a triangle where 2 of the sides are length 2 and 
+  # one is length dist
+  theta = math.degrees(math.acos((2*(r**2) - dist**2)/(2*r**2)))
   
 
-  #90 degrees of rotation as the start and -90 degrees as the end
-  # you take a right turn if tanV comes after tanU on the circle
-  isRight = thetaU > thetaV
+  #the turn we are talking is a right if the vector l1 has a component moving towards the right
+  #and the point along the arc we are traveling to is also to the right and left otherwise
+  #if l1 has a component moving left then those rules flip
+  isRight = (tan2[0] > tan1[0]) ^ (l1.p2[0] - l1.p1[0] < 0)
   
 
-  #translate the tangent points back to their original positions
-  # since we centered both vectors at 0
-  tanU = [round(tanU[0] + x2, 5), round(tanU[1] + y2, 5)]
-  tanV = [round(tanV[0] + x2, 5), round(tanV[1] + y2, 5)]
-  # print("return from arc in lines")
-  # print(tanU, tanV, theta, isRight)
-  return [(circleCenter[0] + x2, circleCenter[1] + y2)]
-  # return (tanU, tanV, theta, isRight)
+  #if l1 is vertical then turn right if l2 to the right of l1 
+  #but this is flipped if l1 is going in the negative direction
+  if l1.isVertical:
+    isRight = (tan2[0] > tan1[0]) ^ (l1.p2[1] - l1.p1[1] < 0)
+
+  #However is the line where are turn to is vertical we turn right if the 
+  #l2 is below the current line (which is flipped if we l1 is going to the left)
+  if l2.isVertical:
+    isRight = (tan1[1] > tan2[1]) ^ (l1.p2[0] - l1.p1[0] < 0)
+  
+  return tan1, tan2, round(theta, SIG_FIGS), isRight
+  
+
+
  
 
    
-    
-# calculateArcSpeed(250, 290, 2000, 1000, 90)
-# calculateArcSpeed(500, 290, 2000, 2000, 90)
-# calculateArcSpeed(500, 290, 2000, 2000, 90)
-# calculateArcSpeed(1000, 290, 2000, 1000, 90)
-
-# print(findArcInLines(-10000,10000,0,0, -100000,-100000, 500*mmToSteps))
-# findArcInLines([-100,100], [-100,-100], 10)
-# findArcInLines([100,-100], [100,100], 10)
-# findArcInLines([100,0], [0,100], 10)
 
 xLst = [0, 1000, 1000, 0]
 yLst = [0, 0, 1000,1000]
-# print(processPointsWStops(xLst, yLst, 100))
-# print(processPointsNoStops(xLst, yLst, 100))
+# # print(processPointsWStops(xLst, yLst, 100))
+print(processPointsNoStops(xLst, yLst, 100))

@@ -28,7 +28,7 @@ class Line:
       #it is a vertical line so just offset the x value 
       return Line([self.p1[0] + dist, self.p1[1]],[self.p2[0] + dist, self.p2[1]]) 
     u = self.perpendicularVector(dist)
-    print(u)
+    # print(u)
     p1 = (0, self.yInt)
     p2 = (1, self.f(1))
     # print([p1[0] + u[0], p1[1] + u[1]], [p2[0] + u[0], p2[1] + u[1]])
@@ -45,5 +45,4 @@ class Line:
     mag = math.sqrt(x**2 + y**2)
     return ((x/mag) * dist, (y/mag) * dist)
   
-
 
