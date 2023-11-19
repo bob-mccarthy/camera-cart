@@ -10,6 +10,8 @@ class DecelStepper: public AccelStepper{
     void run();
     void moveTo(long position);
     void move(long position);
+    void moveTargetPos(long position); //moves target position by position steps
+    void resetPos(); //set current and target position back to 0
     void addPadding(long _padding); // adds additional steps to all of your move instructions that is not reflected in the targetPos;
     bool done();
     
@@ -18,7 +20,7 @@ class DecelStepper: public AccelStepper{
     unsigned long timeUntilSpeed; //the time we are supposed to change our speed in microseconds
     bool speedToBeSet; // true if someone called goToSpeedAfterTime
     unsigned int targetSpeed = 0; //save speed we want to decel to
-    long targetPos; //save position for when you are delaying
+    long targetPos = 0; //keeps track of the targetPos disregarding padding
     long padding = 0;
     bool decel = false;
     

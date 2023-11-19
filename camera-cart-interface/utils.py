@@ -82,6 +82,7 @@ def processPointsWStops(xLst, yLst, scale):
 def processPointsNoStops(xLst, yLst, scale):
   xLst = [x * scale for x in xLst ]
   yLst = [y * scale * -1 for y in yLst]
+  print(f'points x, y: {xLst, yLst}')
   turnRadius = 500
   moveInstructions = []
   modeInstructions = []
@@ -140,17 +141,17 @@ def rotateVector(u, angle):
 #giving a triangle centered around the origin
 #it rotates it and then translates its center to cX, cY
 def rotateTriangle(A, B, C, angleDegrees, cX, cY):
-   # Convert the angle from degrees to radians
-    angleRadians = np.radians(angleDegrees)
+  # Convert the angle from degrees to radians
+  angleRadians = np.radians(angleDegrees)
 
-    # Create the 2D rotation matrix
-    rotationMatrix = np.array([[np.cos(angleRadians), -np.sin(angleRadians)],
-                                [np.sin(angleRadians), np.cos(angleRadians)]])
-    # Rotate the translated triangle
-    rotatedTriangle = np.dot(np.array([A,B,C]), rotationMatrix)
-    translatedArray = rotatedTriangle + np.array([cX, cY])
+  # Create the 2D rotation matrix
+  rotationMatrix = np.array([[np.cos(angleRadians), -np.sin(angleRadians)],
+                              [np.sin(angleRadians), np.cos(angleRadians)]])
+  # Rotate the translated triangle
+  rotatedTriangle = np.dot(np.array([A,B,C]), rotationMatrix)
+  translatedArray = rotatedTriangle + np.array([cX, cY])
 
-    return translatedArray.astype(int).tolist()
+  return translatedArray.astype(int).tolist()
 
 #returns the speed of the slower for the motor, the time the slower motor needs to be at the slower speed (in microseconds),
 #the steps of bool motors in order turn in an arc 
@@ -211,9 +212,10 @@ def findArcInLines(x1, y1, x2, y2, x3, y3, r):
   else:
     mConstant = (-1 if (v[0] > u[0]) else 1) * (-1 if (u[1] > 0) else 1)
 
-
+  print(f'u,v: {u,v}')
   #get vector along u that is of length s and rotate it by angle/2
   circleCenter = rotateVector([(v[0]/magU) * s, (v[1]/magU) * s], mConstant* math.degrees(angle/2))
+  print(f'Circle Center: {(circleCenter[0], circleCenter[1])}')
 
   #vector perpendicular to u with magnitude r
   pU = [1, -u[0]/u[1]] if u[1] != 0 else [0, 1]
@@ -272,8 +274,10 @@ def findArcInLines(x1, y1, x2, y2, x3, y3, r):
   # since we centered both vectors at 0
   tanU = [round(tanU[0] + x2, 5), round(tanU[1] + y2, 5)]
   tanV = [round(tanV[0] + x2, 5), round(tanV[1] + y2, 5)]
-  # print(tanU, tanV)
-  return (tanU, tanV, theta, isRight)
+  # print("return from arc in lines")
+  # print(tanU, tanV, theta, isRight)
+  return [(circleCenter[0] + x2, circleCenter[1] + y2)]
+  # return (tanU, tanV, theta, isRight)
  
 
    
@@ -291,4 +295,4 @@ def findArcInLines(x1, y1, x2, y2, x3, y3, r):
 xLst = [0, 1000, 1000, 0]
 yLst = [0, 0, 1000,1000]
 # print(processPointsWStops(xLst, yLst, 100))
-print(processPointsNoStops(xLst, yLst, 100))
+# print(processPointsNoStops(xLst, yLst, 100))

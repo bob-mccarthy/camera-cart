@@ -27,12 +27,14 @@ class StepperCart
   public:
     StepperCart(int dirPin1, int stepPin1, int dirPin2, int stepPin2, unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius);
     void moveLinear(unsigned long distance, int direction); //straight line movement of distance (Motor Stepper Steps), direction (backward: -1, forward: 1)
+    void moveTargetPosLinear(unsigned long distance, int direction); //moves target position in a straight line by distance (Motor Stepper Steps), direction (backward: -1, forward: 1)
     void turnArc(unsigned int slowerSpeed, double accelTime, long slowerDist, long fasterDist, int direction); // faster implementation of turn arc
-    void turnArc(unsigned long radius, unsigned int degrees, int direction); // turn arc of radius (millimeters), degrees (degrees), direction (left: -1, right: 1)
     void turn(unsigned int degrees, int direction); //turn in place defined by degrees in direction (-1:CCW, 1: CW)
+    void moveTargetPosTurn(unsigned int degrees, int direction); // turn in place, but if we are currently turning it will add this turn onto the end of the previous one
     void run(); //steps the step motors if a step is due
     void setStop(bool _stop);//set if the motors will stop after this last instruction
     bool done();//returns if the motors have finsihed their previous instruction
+    void reset(); //resets all the positions of the stepper motors 
 
 
 };

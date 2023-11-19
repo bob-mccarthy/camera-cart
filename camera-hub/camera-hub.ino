@@ -7,12 +7,12 @@
 //mode tells what kind of movement we are doing
 //  0: straight line, 1: turn clockwise ( + is clockwise), 2: stop
 typedef struct instruction{
-  int movement;
+  long movement;
   int16_t time;
   int8_t mode;
 } instruction;
 
-const int buttonPin = 14;
+const int buttonPin = 33;
 
 int lastPressed = 0;
 
@@ -108,12 +108,16 @@ void loop() {
               myData.currInstruction.movement = doc["moveInstructions"][i];
               myData.currInstruction.time = doc["timeInstructions"][i];
               myData.currInstruction.mode = doc["modeInstructions"][i];
-              if (doc["modeInstructions"][i] == 5 || doc["modeInstructions"][i] == 6){
-                myData.mode = doc["modeInstructions"][i];
+              //checks if we are sending driving command
+              if (doc["modeInstructions"][i] == 8 || doc["modeInstructions"][i] == 9){
+                //mode is 5 or 6 for drive command instructions 
+                myData.mode = (uint8_t) doc["modeInstructions"][i] - 3;
               }
               else{
                 myData.mode = i == 0 ? 2 : 3;
               }
+              Serial.print("Mode: ");
+              Serial.println(myData.mode);
               
               esp_err_t result = esp_now_send(cartAddress, (uint8_t *) &myData, sizeof(myData));
             }  

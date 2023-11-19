@@ -26,12 +26,14 @@ class Communication:
             "timeInstructions" : [0],
             "modeInstructions" : [directionsToNums[direction][1]]
         }
+        # print(message)
         self.sendDict(message)
 
     def sendDict(self, dictMessage):
         jsonMessage = json.dumps(dictMessage)
         #converts message from a string to a bytes to write to the serial monitor
         self.connectedDevice.write(bytes(jsonMessage + "\n", 'utf-8'))
+
     def sendPoints(self, xLst, yLst, scale):
         moveInstructions, modeInstructions = processPointsNoStops(xLst, yLst, scale)
         print(moveInstructions, modeInstructions)

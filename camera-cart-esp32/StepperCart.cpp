@@ -20,10 +20,21 @@ StepperCart::StepperCart(int dirPin1, int stepPin1, int dirPin2, int stepPin2, u
   wheelRadius = _wheelRadius;
 }
 
+void StepperCart::reset(){
+  left->resetPos();
+  right->resetPos();
+}
+
 void StepperCart::moveLinear(unsigned long distance, int direction){
   // Serial.println("in moveLinear");
   left->move(distance*direction);
   right->move(distance*direction);
+}
+
+void StepperCart::moveTargetPosLinear(unsigned long distance, int direction){
+  // Serial.println("in moveLinear");
+  left->moveTargetPos(distance*direction);
+  right->moveTargetPos(distance*direction);
 }
 
 // void StepperCart::moveLinear(unsigned long distance, int direction){
@@ -59,37 +70,6 @@ void StepperCart::setStop(bool _stop){
   right->addPadding(paddingDistance);
 }
 
-
-// StepperCart::turnArc(unsigned long radius, unsigned int degrees, int direction){
-//   left->setCurrentPosition(0);
-//   right->setCurrentPosition(0);
-
-//   //the slower motor is in the direction we want to turn 
-//   slower = direction == -1? left : right;
-//   faster = direction == -1? right: left
-
-  
-//   //number of steps taken by the faster motor
-//   int fasterTotalDistance = 0;
-
-//   float C = (2.0*radius)/AXLE_LENGTH;
-//   float avgRatio = ((C - 1)/ (C + 1)); //average ratio of the slower motor speed and higher motor speed (1/k) 
-//   double T = fasterTotalDistance/speed; // total time of turn in seconds 
-
- 
-
-//   unsigned int quadSqrt = sqrt((accel * accel) + 4*(accel/T)*(speed*(1 - (1/k))))
-//   double L = (accel - quadSqrt) / (2*(-accel/(double)T));//the length of acceleration in seconds
-  
-
-  
-//   //if the robot is not coming to a stop at the end of the turn then add the padding distance;
-//   if(!stop){
-//     fasterTotalDistance += paddingDistance;
-//   }
-//   faster.moveTo
-// }
-
 void StepperCart::turn(unsigned int degrees, int direction){
   //amount of millimeters on the circumference needs to turn degrees amount of degrees
   long totalMM = 2*PI*axleLength*(degrees/360.0);
@@ -97,6 +77,16 @@ void StepperCart::turn(unsigned int degrees, int direction){
   long totalSteps = 3200/(2*PI*wheelRadius)*totalMM;
   left->move(totalSteps/2.0*direction);
   right->move(-1*totalSteps/2.0*direction);
+}
+
+void StepperCart::moveTargetPosTurn(unsigned int degrees, int direction){
+  //amount of millimeters on the circumference needs to turn degrees amount of degrees
+  long totalMM = 2*PI*axleLength*(degrees/360.0);
+  //circumenfernce of wheel/ steps per rotation * totalMMs gives total number of steps
+  long totalSteps = 3200/(2*PI*wheelRadius)*totalMM;
+  left->moveTargetPos(totalSteps/2.0*direction);
+  right->moveTargetPos(-1*totalSteps/2.0*direction);
+
 }
 
 void StepperCart::run(){
