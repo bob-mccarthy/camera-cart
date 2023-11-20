@@ -83,21 +83,19 @@ def processPointsWStops(xLst, yLst, scale):
 def processPointsNoStops(xLst, yLst, scale):
   xLst = [x * scale for x in xLst ]
   yLst = [y * scale * -1 for y in yLst]
-  print(f'points x, y: {xLst, yLst}')
-  turnRadius = 500 * mmToSteps
+  # print(f'points x, y: {xLst, yLst}')
+  turnRadius = 300
   moveInstructions = []
   modeInstructions = []
   lastX, lastY = xLst[0], yLst[0]
   for i in range(0, len(xLst) - 1):
     
     if i < len(xLst) - 2:
-      # print(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2])
-      tanU, tanV, theta, isRight = findArc(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
+      tan1, tan2, theta, isRight = findArc(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
       slowerSpeed, accelTime, slowerSteps, fasterSteps = calculateArcSpeed(turnRadius, axleLength, acceleration, baseSpeed, theta)
-      # print(f'tanU: {tanU}')
-      # print(f'tanV: {tanV}')
+
       #append an instruction from the line to the beginning of the arc
-      moveInstructions.append(round(math.sqrt((tanU[0] - lastX) ** 2  + (tanU[1] - lastY) ** 2)))
+      moveInstructions.append(round(math.sqrt((tan1[0] - lastX) ** 2  + (tan1[1] - lastY) ** 2)))
       modeInstructions.append(0)
 
       #append the arc instructions
@@ -115,18 +113,11 @@ def processPointsNoStops(xLst, yLst, scale):
       modeInstructions.append(7)
       
       # print(tanU, tanV)
-      lastX = tanV[0]
-      lastY = tanV[1]
-      # #append the instruction for the straight line after the arc
-      # moveInstructions.append(math.sqrt((xLst[i+2] - tanV[0]) ** 2  + (yLst[i+2] - tanV[1]) ** 2 ))
-      # modeInstructions.append(0)
+      lastX = tan2[0]
+      lastY = tan2[1]
     else:
       moveInstructions.append(round(math.sqrt((xLst[i+1] - lastX) ** 2  + (yLst[i+1] - lastY) ** 2 )))
       modeInstructions.append(0)
-    # else:
-    #   #add straight line to move and mode instructions
-    #   moveInstructions.append(math.sqrt((xLst[i+1] - xLst[i]) ** 2  + (yLst[i+1] - yLst[i]) ** 2 ) * scale)
-    #   modeInstructions.append(0)
 
   return (moveInstructions, modeInstructions)  
 
@@ -180,6 +171,7 @@ def isColinear(u, v):
 #find the arc which is tangent to the two line segments defined by 
 #the 3 points input into the function with a radius of r
 def findArc(x1, y1, x2, y2, x3, y3, r):
+  r *= mmToSteps
 
   l1 = Line([x1, y1],[x2, y2])
   l2 = Line([x2, y2], [x3, y3])
@@ -264,16 +256,16 @@ def findArc(x1, y1, x2, y2, x3, y3, r):
   #l2 is below the current line (which is flipped if we l1 is going to the left)
   if l2.isVertical:
     isRight = (tan1[1] > tan2[1]) ^ (l1.p2[0] - l1.p1[0] < 0)
-  
+  # return center
   return tan1, tan2, round(theta, SIG_FIGS), isRight
   
 
 
  
-
+# print(calculateArcSpeed(150 * mmToSteps, axleLength, acceleration, baseSpeed, 5))
    
-
-xLst = [0, 1000, 1000, 0]
-yLst = [0, 0, 1000,1000]
+# xLst, yLst = (([20000, 29000, 29000.0, 22026.63711335779], [-20000, -20000, -31500.0, -30889.909800766418]))
+# # xLst = [0, 1000, 1000, 0]
+# # yLst = [0, 0, 1000,1000]
 # # print(processPointsWStops(xLst, yLst, 100))
-print(processPointsNoStops(xLst, yLst, 100))
+# print(processPointsNoStops(xLst, yLst, 100))
