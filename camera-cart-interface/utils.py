@@ -83,7 +83,7 @@ def processPointsWStops(xLst, yLst, scale):
 def processPointsNoStops(xLst, yLst, scale):
   xLst = [x * scale for x in xLst ]
   yLst = [y * scale * -1 for y in yLst]
-  # print(f'points x, y: {xLst, yLst}')
+  print(f'points x, y: {xLst, yLst}')
   turnRadius = 300
   moveInstructions = []
   modeInstructions = []
@@ -158,14 +158,6 @@ def calculateArcSpeed(radius, axleLength, accel, baseSpeed, degrees):
   accelTime = totalTime - L
   slowerSpeed = baseSpeed - (accel* L)
   return (slowerSpeed, int(accelTime * 1000000), int(ratio*baseSpeed*totalTime), int(fasterSteps))
-
-def isColinear(u, v):
-  if u[0] != 0:
-    return round((v[0]/u[0]) * u[1],5) == v[1]
-  elif u[1] != 0:
-    return round((v[1]/u[1]) * u[0], 5) == v[0]
-  else:
-    return True 
   
 
 #find the arc which is tangent to the two line segments defined by 
@@ -241,10 +233,11 @@ def findArc(x1, y1, x2, y2, x3, y3, r):
   theta = math.degrees(math.acos((2*(r**2) - dist**2)/(2*r**2)))
   
 
-  #the turn we are talking is a right if the vector l1 has a component moving towards the right
-  #and the point along the arc we are traveling to is also to the right and left otherwise
+  #the turn we are taking is a right if the vector l1 has a component moving towards right
+  #and l2 is above the line defined by l1
   #if l1 has a component moving left then those rules flip
-  isRight = (tan2[0] > tan1[0]) ^ (l1.p2[0] - l1.p1[0] < 0)
+  if not l1.isVertical and not l2.isVertical:
+    isRight = (l1.f(l2.p2[0]) > l2.p2[1]) ^ (l1.p2[0] - l1.p1[0] < 0)
   
 
   #if l1 is vertical then turn right if l2 to the right of l1 
@@ -252,11 +245,11 @@ def findArc(x1, y1, x2, y2, x3, y3, r):
   if l1.isVertical:
     isRight = (tan2[0] > tan1[0]) ^ (l1.p2[1] - l1.p1[1] < 0)
 
-  #However is the line where are turn to is vertical we turn right if the 
+  #However if the line that you are turning to is vertical we turn right if the 
   #l2 is below the current line (which is flipped if we l1 is going to the left)
   if l2.isVertical:
     isRight = (tan1[1] > tan2[1]) ^ (l1.p2[0] - l1.p1[0] < 0)
-  # return center
+
   return tan1, tan2, round(theta, SIG_FIGS), isRight
   
 

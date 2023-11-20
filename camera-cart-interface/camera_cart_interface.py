@@ -16,7 +16,7 @@ CANVAS_HEIGHT = 400
 GRID_COLS = 20
 GRID_ROWS = 20
 
-UNITS = 100
+UNITS = 250
 
 hubCommunication = Communication()
 ports = hubCommunication.listAllPorts()
