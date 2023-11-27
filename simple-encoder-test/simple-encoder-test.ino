@@ -1,5 +1,5 @@
-const int ENCA = 7;
-const int ENCB = 5;
+const int ENCA = 2;
+const int ENCB = 4;
 long position = 0;
 void IRAM_ATTR readEncoder(){
   int b = digitalRead(ENCB);
@@ -17,5 +17,5 @@ void setup(){
 }
 
 void loop(){
-  
+  Serial.println(position);
 }
