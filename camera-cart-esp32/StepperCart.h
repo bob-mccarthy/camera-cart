@@ -22,13 +22,20 @@ class StepperCart
     unsigned long paddingDistance; //we need to pad all instructions that are not working
     unsigned int axleLength;
     unsigned int wheelRadius;
+    double mmToSteps;
 
     
   public:
+    //initialize stepper cart with a4988 motor drivers
     StepperCart(int dirPin1, int stepPin1, int dirPin2, int stepPin2, unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius);
+    //initialize stepper cart with tmc motor drivers
+    StepperCart(int dirPin1, int stepPin1, int enablePin1, int rxPin1, int txPin1, HardwareSerial& mySerial1, 
+                int dirPin2, int stepPin2, int enablePin2, int rxPin2, int txPin2, HardwareSerial& mySerial2, 
+                unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius,
+                uint16_t microsteps);
     void moveLinear(unsigned long distance, int direction); //straight line movement of distance (Motor Stepper Steps), direction (backward: -1, forward: 1)
     void moveTargetPosLinear(unsigned long distance, int direction); //moves target position in a straight line by distance (Motor Stepper Steps), direction (backward: -1, forward: 1)
-    void turnArc(unsigned int slowerSpeed, double accelTime, long slowerDist, long fasterDist, int direction); // faster implementation of turn arc
+    void turnArc(unsigned int slowerSpeed, unsigned long accelTime, long slowerDist, long fasterDist, int direction); // faster implementation of turn arc
     void turn(unsigned int degrees, int direction); //turn in place defined by degrees in direction (-1:CCW, 1: CW)
     void moveTargetPosTurn(unsigned int degrees, int direction); // turn in place, but if we are currently turning it will add this turn onto the end of the previous one
     void run(); //steps the step motors if a step is due

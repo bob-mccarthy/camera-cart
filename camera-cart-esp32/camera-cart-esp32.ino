@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <AccelStepper.h>
 #include "StepperCart.h"
+#include <HardwareSerial.h>
 
 //mode tells what kind of movement we are doing
 //  0: straight line, 1: turn clockwise ( + is CW, - is CCW) 2: stop 
@@ -30,21 +31,20 @@ uint8_t numInstructions = 0;
 const int MAX_LENGTH = 200;
 instruction instructions[MAX_LENGTH];
 
-
-StepperCart cart(19, 18, 12, 14, 2000, 2000, 290, 40);
-
 const int BASE_ACCEL = 2000;
 
 const int BASE_SPEED = 2000;
 
-//num steps in rotation/(circumference of wheel)
-const double mmToSteps = 3200/(80*PI);
+//length from the middle of each wheel
+const int AXLE_LENGTH = 295;
 
-//units millimeters
-const int AXLE_LENGTH = 290;
+const uint16_t MICROSTEPS = 16;
 
-//units millimeters
-const int TURN_RADIUS = 500; 
+const int WHEEL_RADIUS = 40;
+
+HardwareSerial SerialPort(1);
+// StepperCart cart(19, 18, 12, 14, 2000, 2000, 290, 40);
+StepperCart cart(14, 15,27, 16, 17, Serial2, 19, 18, 5, 4, 2, SerialPort, BASE_ACCEL, BASE_SPEED, AXLE_LENGTH, WHEEL_RADIUS, MICROSTEPS);
 
 //used to check if we are playing preset instructions and which one we are on
 bool playing = false;
