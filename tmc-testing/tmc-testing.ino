@@ -2,10 +2,8 @@
 #include <HardwareSerial.h>
 #include <TMCStepper.h>
 #include <SPI.h>
-#include <SoftwareSerial.h>
+// #include <SoftwareSerial.h>
 
-#define MYPORT_TX 12
-#define MYPORT_RX 13
 
 // HardwareSerial::mySerial(1);
 // HardwareSerial SerialPort(1);
@@ -34,10 +32,10 @@ TMC2209Stepper driver2(&Serial2, R_SENSE , DRIVER_ADDRESS);
 AccelStepper stepper1(AccelStepper::DRIVER, STEP_PIN1, DIR_PIN1);
 AccelStepper stepper2(AccelStepper::DRIVER, STEP_PIN2, DIR_PIN2);
 
-int  set_current = 600;
+int  set_current = 800;
 
 bool stalled_motor = false;
-uint16_t motor_microsteps = 4;
+uint16_t motor_microsteps = 16;
 long long current_position = 0;
 
 
@@ -51,7 +49,6 @@ void setup(){
   	Serial.begin(115200);
     // Serial1.begin(115200, SERIAL_8N1,RX,TX);
   	SerialPort.begin(115200, SERIAL_8N1, RX, TX);
-    // Serial2.begin(115200, SERIAL_8N1, MYPORT_RX, MYPORT_TX);
   	driver1.begin(); // Start all the UART communications functions behind the scenes
   	driver1.toff(4); //For operation with StealthChop, this parameter is not used, but it is required to enable the motor. In case of operation with StealthChop only, any setting is OK
   	driver1.blank_time(24); //Recommended blank time select value
@@ -88,11 +85,11 @@ void setup(){
 
     stepper1.setMaxSpeed(1500.0);
     stepper1.setAcceleration(1000.0);
-    stepper1.moveTo(10000);
+    stepper1.moveTo(2000);
 
     stepper2.setMaxSpeed(1500.0);
     stepper2.setAcceleration(1000.0);
-    stepper2.moveTo(10000);
+    stepper2.moveTo(2000);
   	
 
 }

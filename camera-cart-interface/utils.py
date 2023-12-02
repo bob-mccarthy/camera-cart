@@ -2,13 +2,12 @@ import math
 import numpy as np
 from line import Line
 
-#steps in a rotation
-stepsPerRot = 3200
+microSteps = 16
 wheelCircumference = (80*math.pi)
 #times number of steps in a rotation divided by the circumference of the wheel
-mmToSteps = stepsPerRot/wheelCircumference
+mmToSteps = (200*microSteps)/wheelCircumference
 #length from middle of one wheel to the other, in millimeters
-axleLength = 290
+axleLength = 295
 acceleration = 2000
 baseSpeed = 2000
 
@@ -84,7 +83,7 @@ def processPointsNoStops(xLst, yLst, scale):
   xLst = [x * scale for x in xLst ]
   yLst = [y * scale * -1 for y in yLst]
   print(f'points x, y: {xLst, yLst}')
-  turnRadius = 300
+  turnRadius = 500
   moveInstructions = []
   modeInstructions = []
   lastX, lastY = xLst[0], yLst[0]
@@ -92,7 +91,8 @@ def processPointsNoStops(xLst, yLst, scale):
     
     if i < len(xLst) - 2:
       tan1, tan2, theta, isRight = findArc(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
-      slowerSpeed, accelTime, slowerSteps, fasterSteps = calculateArcSpeed(turnRadius, axleLength, acceleration, baseSpeed, theta)
+      print(tan1, tan2, theta)
+      slowerSpeed, accelTime, slowerSteps, fasterSteps = calculateArcSpeed(turnRadius * mmToSteps, axleLength * mmToSteps, acceleration, baseSpeed, abs(theta))
 
       #append an instruction from the line to the beginning of the arc
       moveInstructions.append(round(math.sqrt((tan1[0] - lastX) ** 2  + (tan1[1] - lastY) ** 2)))
@@ -147,16 +147,18 @@ def rotateTriangle(A, B, C, angleDegrees, cX, cY):
 
 #returns the speed of the slower for the motor, the time the slower motor needs to be at the slower speed (in microseconds),
 #the steps of bool motors in order turn in an arc 
-# given the speed of the radius of the turn, the axle length of the cart,
-# the acceleration of the cart, the speed of the faster motor, degrees of the turn
+# given the radius of the turn (units: steps), the axle length of the cart(units: steps),
+# the acceleration of the cart(units: steps/s/s), the speed of the faster motor (units: steps/s), degrees of the turn (units: degrees)
 def calculateArcSpeed(radius, axleLength, accel, baseSpeed, degrees):
   C = (2 * radius)/axleLength
   ratio = ((C-1)/(C+1))
-  fasterSteps = ((2*math.pi*(radius+axleLength/2))) * (degrees/360) * mmToSteps
+  # print(ratio*baseSpeed)
+  fasterSteps = ((2*math.pi*(radius+axleLength/2))) * (degrees/360)
   totalTime = fasterSteps/baseSpeed
   L = min(np.roots([accel/totalTime, -accel, baseSpeed - baseSpeed*ratio]))
   accelTime = totalTime - L
   slowerSpeed = baseSpeed - (accel* L)
+  # print(accel, baseSpeed, ratio, totalTime)
   return (slowerSpeed, int(accelTime * 1000000), int(ratio*baseSpeed*totalTime), int(fasterSteps))
   
 
@@ -249,15 +251,15 @@ def findArc(x1, y1, x2, y2, x3, y3, r):
   #l2 is below the current line (which is flipped if we l1 is going to the left)
   if l2.isVertical:
     isRight = (tan1[1] > tan2[1]) ^ (l1.p2[0] - l1.p1[0] < 0)
-
   return tan1, tan2, round(theta, SIG_FIGS), isRight
   
 
 
  
-# print(calculateArcSpeed(150 * mmToSteps, axleLength, acceleration, baseSpeed, 5))
-   
-# xLst, yLst = (([20000, 29000, 29000.0, 22026.63711335779], [-20000, -20000, -31500.0, -30889.909800766418]))
+# print(calculateArcSpeed(200 * mmToSteps, axleLength, acceleration, baseSpeed, 5))
+
+# xLst, yLst = ([50000, 61250, 70972.71824131507], [50000, 50000, 40277.28175868497])
+# print(processPointsNoStops(xLst, yLst, 1))
 # # xLst = [0, 1000, 1000, 0]
 # # yLst = [0, 0, 1000,1000]
 # # print(processPointsWStops(xLst, yLst, 100))
