@@ -18,10 +18,7 @@ GRID_ROWS = 20
 
 UNITS = 250
 
-hubCommunication = Communication()
-ports = hubCommunication.listAllPorts()
-print(ports)
-hubCommunication.connectToDevice(ports[3])
+
 
 
 
@@ -29,7 +26,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+        #connect to camera hub
+        self.hubCommunication = Communication()
+        ports = self.hubCommunication.listAllPorts()
+        self.hubCommunication.connectToDevice(ports[3])
+        self.stop = False
         
+
+        
+        # self.t1.daemon = True
         # Set the layout for your main window
         central_widget = QtWidgets.QWidget()
 
@@ -41,10 +46,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.setCentralWidget(self.label)
         # layout.addWidget(self.canvas)
         
+        self.homeBase = CANVAS_LENGTH // 2, CANVAS_HEIGHT // 2
+
         #start with one point which is where the robot starts (this point can be moved)
         self.last_x, self.last_y = CANVAS_LENGTH // 2, CANVAS_HEIGHT // 2
         self.xLst, self.yLst = [self.last_x],[self.last_y]
 
+        # self.textbox = QtWidgets.QLineEdit(self)
+        # self.textbox.setReadOnly(True)
+        # self.textbox.move(20, 20)
+        
+        # self.t1 = threading.Thread(target = self.hubCommunication.serialMonitor, args = [self.textbox])
+        # self.t1.daemon = True
+        # self.t1.start()
 
         self.clearButton = QtWidgets.QPushButton("Clear")
         self.sendButton = QtWidgets.QPushButton("Send")
@@ -58,8 +72,10 @@ class MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QHBoxLayout()
 
         rightPanel = QtWidgets.QVBoxLayout()
+        # rightPanel.addWidget(self.textbox)
         rightPanel.addWidget(self.clearButton)
         rightPanel.addWidget(self.sendButton)
+        # self.textbox.setFixedSize(200, 200)
 
         # Add the QLabel and the button to the layout
         layout.addWidget(self.label)
@@ -95,6 +111,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #send the direction we are moving 
         # and the first movement we do in a new direction should have a larger magnitude then if we are normally in that position
         if event.key() == Qt.Key_Up:
+          print("up")
           self.roomba.move(5)
           x, y = self.roomba.getRoombaCenter()
           if self.startNewLine:
@@ -104,7 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.xLst[-1] = x
             self.yLst[-1] = y
           self.startNewLine = False
-          hubCommunication.sendDirection('Up',5 * UNITS)
+          self.hubCommunication.sendDirection('Up',5 * UNITS)
         elif event.key() == Qt.Key_Down:
           
           self.roomba.move(-5)
@@ -116,15 +133,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.xLst[-1] = x
             self.yLst[-1] = y
           self.startNewLine = False
-          hubCommunication.sendDirection('Down', 5 * UNITS)
+          self.hubCommunication.sendDirection('Down', 5 * UNITS)
         elif event.key() == Qt.Key_Left:
           self.startNewLine = True
           self.roomba.turn(5)
-          hubCommunication.sendDirection('Left', 5)
+          self.hubCommunication.sendDirection('Left', 5)
         elif event.key() == Qt.Key_Right:
           self.startNewLine = True
           self.roomba.turn(-5)
-          hubCommunication.sendDirection('Right', 5)
+          self.hubCommunication.sendDirection('Right', 5)
         self.drawLines()
         self.drawRoomba()
     # When the clear button is clicked remove all lines and reset the camera start 
@@ -136,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update()
 
     def send_clicked(self):
-        hubCommunication.sendPoints(self.xLst, self.yLst, UNITS)
+        self.hubCommunication.sendPoints(self.xLst, self.yLst, UNITS)
 
     def snapPosition(self, x, y):
        x = x
@@ -145,30 +162,30 @@ class MainWindow(QtWidgets.QMainWindow):
       #  y = int((y / CANVAS_HEIGHT) * GRID_COLS) * (CANVAS_LENGTH / GRID_COLS)
        return x, y
 
-    def mouseMoveEvent(self, e):
-        if self.xLst == []: # First event.
-            return # Ignore the first time.
-        if e.x() > 0 and e.y() > 0 and e.x()<= CANVAS_LENGTH and e.y() <= CANVAS_HEIGHT:
-          x, y = self.snapPosition(e.x(), e.y())
-          self.drawLines(x, y)
-          # Update the origin for next time.
-          self.last_x = x
-          self.last_y = y
-        else:
-           self.drawLines()
+    # def mouseMoveEvent(self, e):
+    #     if self.xLst == []: # First event.
+    #         return # Ignore the first time.
+    #     if e.x() > 0 and e.y() > 0 and e.x()<= CANVAS_LENGTH and e.y() <= CANVAS_HEIGHT:
+    #       x, y = self.snapPosition(e.x(), e.y())
+    #       self.drawLines(x, y)
+    #       # Update the origin for next time.
+    #       self.last_x = x
+    #       self.last_y = y
+    #     else:
+    #        self.drawLines()
 
         
 
-    def mouseReleaseEvent(self, e):
-        # if outside the canvas
-        if not (e.x() > 0 and e.y() > 0 and e.x()<= CANVAS_LENGTH and e.y() <= CANVAS_HEIGHT):
-           self.drawLines()
-           return
-        x, y = self.snapPosition(e.x(), e.y())
-        if self.xLst != []: 
-            self.drawLines(x, y)
-        self.xLst.append(x)
-        self.yLst.append(y)
+    # def mouseReleaseEvent(self, e):
+    #     # if outside the canvas
+    #     if not (e.x() > 0 and e.y() > 0 and e.x()<= CANVAS_LENGTH and e.y() <= CANVAS_HEIGHT):
+    #        self.drawLines()
+    #        return
+    #     x, y = self.snapPosition(e.x(), e.y())
+    #     if self.xLst != []: 
+    #         self.drawLines(x, y)
+    #     self.xLst.append(x)
+    #     self.yLst.append(y)
 
     def drawRoomba(self):
       painter = QtGui.QPainter(self.label.pixmap())
@@ -217,6 +234,12 @@ class MainWindow(QtWidgets.QMainWindow):
       if currX is not None:
         painter.drawLine(self.xLst[-1],self.yLst[-1], currX, currY)
       self.update()
+    
+    # def closeEvent(self, e):
+        # this will end the serial monitor
+        # self.stop = False
+        # self.t1.join()
+        # e.accept()
         
         
 
@@ -224,7 +247,7 @@ class MainWindow(QtWidgets.QMainWindow):
 app = QtWidgets.QApplication(sys.argv)
 window = MainWindow()
 window.show()
-hubCommunication.serialMonitor()
+
 app.exec_()
 
 # while(True):

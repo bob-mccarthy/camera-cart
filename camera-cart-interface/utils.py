@@ -83,15 +83,19 @@ def processPointsNoStops(xLst, yLst, scale):
   xLst = [x * scale for x in xLst ]
   yLst = [y * scale * -1 for y in yLst]
   print(f'points x, y: {xLst, yLst}')
-  turnRadius = 500
+  turnRadius = 400
   moveInstructions = []
   modeInstructions = []
   lastX, lastY = xLst[0], yLst[0]
   for i in range(0, len(xLst) - 1):
     
     if i < len(xLst) - 2:
-      tan1, tan2, theta, isRight = findArc(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
-      print(tan1, tan2, theta)
+      theta = abs(find_angle(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2]))
+      # print(f'new Theta: {newTheta}')
+      #are minimum turn radius is 400mm, but for turns of small angles we need a larger radius for the arc 
+      turnRadius = max(400, (1500 - (1100/90) * theta))
+      tan1, tan2, _, isRight = findArc(xLst[i], yLst[i],xLst[i+1], yLst[i+1],xLst[i+2], yLst[i+2], turnRadius)
+      print(f'theta: {theta}')
       slowerSpeed, accelTime, slowerSteps, fasterSteps = calculateArcSpeed(turnRadius * mmToSteps, axleLength * mmToSteps, acceleration, baseSpeed, abs(theta))
 
       #append an instruction from the line to the beginning of the arc
@@ -255,8 +259,12 @@ def findArc(x1, y1, x2, y2, x3, y3, r):
   
 
 
- 
-# print(calculateArcSpeed(200 * mmToSteps, axleLength, acceleration, baseSpeed, 5))
+# print(calculateArcSpeed(1500 * mmToSteps, axleLength*mmToSteps, acceleration, baseSpeed, 5))
+# testAngle = 90
+# print(testAngle)
+# print(calculateArcSpeed((1500 - (1100/90) * testAngle) * mmToSteps, axleLength*mmToSteps, acceleration, baseSpeed, testAngle))
+# print(calculateArcSpeed(300 * mmToSteps, axleLength*mmToSteps, acceleration, baseSpeed, 90))
+# print(calculateArcSpeed(300 * mmToSteps, axleLength*mmToSteps, acceleration, baseSpeed, 355))
 
 # xLst, yLst = ([50000, 61250, 70972.71824131507], [50000, 50000, 40277.28175868497])
 # print(processPointsNoStops(xLst, yLst, 1))
