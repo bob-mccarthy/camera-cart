@@ -19,6 +19,9 @@ class DecelStepper: public AccelStepper{
     void run();
     void moveTo(long position);
     void move(long position);
+    //set flag (needsFinish) which makes the stepper motor finsih it's execution before do another instruction 
+    //(if either move command is called the changes to targetpos will take effect after the stepper motor has stopped)
+    void finishExec();
     void moveTargetPos(long position); //moves target position by position steps
     void resetPos(); //set current and target position back to 0
     void addPadding(long _padding); // adds additional steps to all of your move instructions that is not reflected in the targetPos;
@@ -32,6 +35,7 @@ class DecelStepper: public AccelStepper{
     long targetPos = 0; //keeps track of the targetPos disregarding padding
     long padding = 0;
     bool decel = false;
+    bool needsFinish = false; // set if the current instructions need to finish before new target pos can be set
     
 
 
