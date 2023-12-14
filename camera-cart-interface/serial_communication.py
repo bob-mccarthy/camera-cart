@@ -2,13 +2,14 @@ import serial
 import serial.tools.list_ports
 import json
 import time
-from utils import processPointsNoStops
+from utils import processPointsNoStops, processPointsWStops
 import threading
 
 class Communication:
   
     def __init__(self):
-            pass
+        self.stop = False
+
 
     def listAllPorts(self):
         ports = serial.tools.list_ports.comports()
@@ -45,10 +46,14 @@ class Communication:
         }
         self.sendDict(message)
         time.sleep(0.5)
-    def serialMonitor(self):
-        threading.Timer(3.0, self.serialMonitor).start()
-        while self.connectedDevice.in_waiting:
-            print(self.connectedDevice.readline())
+    def serialMonitor(self, textbox):
+        text = ""
+        while True:
+            while self.connectedDevice.in_waiting:
+                text += str(self.connectedDevice.readline())
+                textbox.setText(text)
+                # print(self.connectedDevice.readline())
+
 
   
 
