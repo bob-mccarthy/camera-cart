@@ -51,21 +51,14 @@ void StepperCart::reset(){
 }
 
 void StepperCart::moveLinear(unsigned long distance, int direction){
-  // Serial.println("in moveLinear");
   left->move(distance*direction);
   right->move(distance*direction);
 }
 
 void StepperCart::moveTargetPosLinear(unsigned long distance, int direction){
-  // Serial.println("in moveLinear");
   left->moveTargetPos(distance*direction);
   right->moveTargetPos(distance*direction);
 }
-
-// void StepperCart::moveLinear(unsigned long distance, int direction){
-//   left->move(distance*direction);
-//   right->move(distance*direction);
-// }
 
 bool StepperCart::done(){
   return left->done() && right->done();
@@ -84,8 +77,6 @@ void StepperCart::turnArc(unsigned int slowerSpeed, unsigned long accelTime,  lo
   slower->goToSpeed(slowerSpeed);
   slower->goToSpeedAfterTime(speed, accelTime);
 
-  // faster->goToSpeed(slowerSpeed);
-  // faster->goToSpeedAfterTime(speed, accelTime);
   
 }
 
@@ -107,11 +98,15 @@ void StepperCart::turn(unsigned int degrees, int direction){
 void StepperCart::moveTargetPosTurn(unsigned int degrees, int direction){
   //amount of millimeters on the circumference needs to turn degrees amount of degrees
   double totalMM = 2*PI*axleLength*(degrees/360.0);
-  //circumenfernce of wheel/ steps per rotation * totalMMs gives total number of steps
+  //circumfernce of wheel/ steps per rotation * totalMMs gives total number of steps
   long totalSteps = mmToSteps*totalMM;
   left->moveTargetPos(totalSteps/2.0*direction);
   right->moveTargetPos(-1*totalSteps/2.0*direction);
+}
 
+void StepperCart::finishExec(){
+  left->finishExec();
+  right->finishExec();
 }
 
 void StepperCart::run(){

@@ -70,7 +70,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //creating first instruction
     case(2):
-      // Serial.println("start sending");
       playing = false;
       cart.setStop(false);
       cart.reset();
@@ -98,16 +97,10 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //sending drive command
     case(5):
+      if (isTurning){
+        cart.finishExec();
+      }
       cart.setStop(true);
-      // //if the cart was just turning let it finish that motion before moving linearly it 
-      // while (isTurning && !cart.done()){
-      //   cart.run();
-      // }
-      // Serial.println("straight line");
-
-      //adds the distance from the drive command onto the current target distance
-      // cart.moveLinear(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
-      // cart.moveTargetPosLinear(-100, 1);
       cart.moveTargetPosLinear(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
       isTurning = false;
       drivingMode = true;
@@ -116,14 +109,10 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //sending turn command
     case(6):
+      if (!isTurning){
+        cart.finishExec();
+      }
       cart.setStop(true);
-      // //if the cart was just moving linearly let it finish that motion before turning it 
-      // while (!isTurning && !cart.done()){
-      //   cart.run();
-      // }
-      // Serial.println("turning");
-      //adds the degrees from the turn command onto the turning it was already doing
-      // cart.turn(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
       cart.moveTargetPosTurn(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
       isTurning = true;
       drivingMode = true;
@@ -151,7 +140,6 @@ void setup(){
 
 void loop(){
   if (playing && cart.done() && currInstruction < numInstructions - 1){
-    Serial.println("in playing");
     currInstruction++;
     if (currInstruction == numInstructions - 1){
       cart.setStop(true);

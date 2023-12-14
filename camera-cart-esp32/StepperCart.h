@@ -42,6 +42,7 @@ class StepperCart
     void setStop(bool _stop);//set if the motors will stop after this last instruction
     bool done();//returns if the motors have finsihed their previous instruction
     void reset(); //resets all the positions of the stepper motors 
+    void finishExec(); //makes the cart finish go to its current target position before updating it
 
 
 };

@@ -51,20 +51,36 @@ bool DecelStepper::done(){
 
 void DecelStepper::moveTo(long position){
   targetPos = position;
-  this->AccelStepper::moveTo(targetPos + padding);
+  if (!needsFinish){
+    this->AccelStepper::moveTo(targetPos + padding);
+  }
+  
 }
 
 void DecelStepper::move(long position){
   targetPos = this->AccelStepper::currentPosition() + position;
-  // Serial.println(targetPos);
-  this->AccelStepper::moveTo(targetPos + padding);
+  if(!needsFinish){
+    this->AccelStepper::moveTo(targetPos + padding);
+  }
+  
 }
 
 void DecelStepper::moveTargetPos(long position){
   targetPos += position;
-  Serial.println(targetPos + padding);
-  this->AccelStepper::moveTo(targetPos + padding);
+  if (!needsFinish){
+    this->AccelStepper::moveTo(targetPos + padding);
+  }
+  
 }
+
+void DecelStepper::finishExec(){
+  needsFinish = true;
+}
+// void DecelStepper::moveTargetPosAfterRun(long position){
+//   targetPos += position;
+//   needsFinish = true;
+//   // this->AccelStepper::moveTo(targetPos + padding);
+// }
 
 void DecelStepper::resetPos(){
   targetPos = 0;
@@ -77,9 +93,7 @@ void DecelStepper::addPadding(long _padding){
 
 void DecelStepper::run(){
   //checking if we are currently decelerating we have reached our target speed
-  if (decel && this->speed() <= targetSpeed){
-    // endDecel = millis();
-    
+  if (decel && this->speed() <= targetSpeed){    
     this->setMaxSpeed(targetSpeed);
     this->moveTo(targetPos);
     decel = false;
@@ -90,5 +104,10 @@ void DecelStepper::run(){
     speedToBeSet = false;
 
   }
+  if (needsFinish && this->distanceToGo() == 0){
+    needsFinish = false;
+    this->moveTo(targetPos);
+  }
+
   this->AccelStepper::run();
 }
