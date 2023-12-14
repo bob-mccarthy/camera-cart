@@ -1,16 +1,17 @@
 #ifndef STEPPERCART_H
 #define STEPPERCART_H
 
-#include "DecelStepper.h"
+// #include "DecelStepper.h"
+#include "FastDecelStepper.h"
 
 class StepperCart
 {
   private:
 
-    DecelStepper *left;
-    DecelStepper *right;
-    DecelStepper *slower; //slower motor when turning on an arc
-    DecelStepper *faster; //faster motor when turning on an arc
+    FastDecelStepper *left;
+    FastDecelStepper *right;
+    FastDecelStepper *slower; //slower motor when turning on an arc
+    FastDecelStepper *faster; //faster motor when turning on an arc
     bool stop = false; //check whether the cart is coming to a stop
     bool startDecel = false;
     bool startAccel = false;
@@ -27,7 +28,7 @@ class StepperCart
     
   public:
     //initialize stepper cart with a4988 motor drivers
-    StepperCart(int dirPin1, int stepPin1, int dirPin2, int stepPin2, unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius);
+    StepperCart(int dirPin1, int stepPin1, int enPin1, int dirPin2, int stepPin2, int enPin2, unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius);
     //initialize stepper cart with tmc motor drivers
     StepperCart(int dirPin1, int stepPin1, int enablePin1, int rxPin1, int txPin1, HardwareSerial& mySerial1, 
                 int dirPin2, int stepPin2, int enablePin2, int rxPin2, int txPin2, HardwareSerial& mySerial2, 
@@ -42,7 +43,7 @@ class StepperCart
     void setStop(bool _stop);//set if the motors will stop after this last instruction
     bool done();//returns if the motors have finsihed their previous instruction
     void reset(); //resets all the positions of the stepper motors 
-    void finishExec(); //makes the cart finish go to its current target position before updating it
+    void setBlocking(bool isBlocking); // if isBlocking is true then the cart waits til each instruction finishes before executing the next one
 
 
 };

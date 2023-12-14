@@ -70,6 +70,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //creating first instruction
     case(2):
+      cart.setBlocking(false);
       playing = false;
       cart.setStop(false);
       cart.reset();
@@ -98,7 +99,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     //sending drive command
     case(5):
       if (isTurning){
-        cart.finishExec();
+        cart.setBlocking(true);
       }
       cart.setStop(true);
       cart.moveTargetPosLinear(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
@@ -110,7 +111,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     //sending turn command
     case(6):
       if (!isTurning){
-        cart.finishExec();
+        cart.setBlocking(true);
       }
       cart.setStop(true);
       cart.moveTargetPosTurn(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);

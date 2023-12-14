@@ -1,11 +1,11 @@
 #include "StepperCart.h"
 
-StepperCart::StepperCart(int dirPin1, int stepPin1, int dirPin2, int stepPin2, unsigned long _accel, 
+StepperCart::StepperCart(int dirPin1, int stepPin1, int enPin1, int dirPin2, int stepPin2,int enPin2, unsigned long _accel, 
                          unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius){
   accel = _accel;
   speed = _speed;
-  left = new DecelStepper(dirPin1, stepPin1);
-  right = new DecelStepper(dirPin2, stepPin2);
+  left = new FastDecelStepper(dirPin1, stepPin1, enPin1);
+  right = new FastDecelStepper(dirPin2, stepPin2, enPin2);
   left->setAcceleration(accel);
   right->setAcceleration(accel);
   left->setMaxSpeed(speed);
@@ -29,8 +29,8 @@ StepperCart::StepperCart(int dirPin1, int stepPin1, int enablePin1, int rxPin1, 
                          uint16_t microsteps){
   accel = _accel;
   speed = _speed;
-  left = new DecelStepper(dirPin1, stepPin1, enablePin1, rxPin1, txPin1, mySerial1, microsteps);
-  right = new DecelStepper(dirPin2, stepPin2, enablePin2, rxPin2, txPin2, mySerial2, microsteps);
+  left = new FastDecelStepper(dirPin1, stepPin1, enablePin1, rxPin1, txPin1, mySerial1, microsteps);
+  right = new FastDecelStepper(dirPin2, stepPin2, enablePin2, rxPin2, txPin2, mySerial2, microsteps);
   left->setAcceleration(accel);
   right->setAcceleration(accel);
   left->setMaxSpeed(speed);
@@ -104,9 +104,9 @@ void StepperCart::moveTargetPosTurn(unsigned int degrees, int direction){
   right->moveTargetPos(-1*totalSteps/2.0*direction);
 }
 
-void StepperCart::finishExec(){
-  left->finishExec();
-  right->finishExec();
+void StepperCart::setBlocking(bool isBlocking){
+  left->setBlocking(isBlocking);
+  right->setBlocking(isBlocking);
 }
 
 void StepperCart::run(){
