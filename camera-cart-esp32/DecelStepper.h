@@ -36,9 +36,6 @@ class DecelStepper: public AccelStepper{
     long padding = 0;
     bool decel = false;
     bool needsFinish = false; // set if the current instructions need to finish before new target pos can be set
-    
-
-
 };
 
 #endif
