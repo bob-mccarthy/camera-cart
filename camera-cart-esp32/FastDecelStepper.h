@@ -14,8 +14,8 @@ const int  SET_CURRENT = 600;
 
 class FastDecelStepper{
   public:
-    FastDecelStepper(uint8_t dirPin, uint8_t stepPin, uint8_t enablePin);
-    FastDecelStepper(uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t rxPin, uint8_t txPin, HardwareSerial& mySerial, uint16_t microsteps); //initialize FastDecelStepper with TMC
+    FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin);
+    FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t rxPin, uint8_t txPin, HardwareSerial& mySerial, uint16_t microsteps); //initialize FastDecelStepper with TMC
     void setMaxSpeed(long maxSpeed);//sets the maxSpeed of the motor in steps per second 
     void setAcceleration(long acceleration); //sets the acceleration of the motor in steps per second per second
     void setCurrentPosition(long position);
@@ -33,11 +33,10 @@ class FastDecelStepper{
     bool done();
     
   private:
-    FastAccelStepperEngine engine = FastAccelStepperEngine();
     FastAccelStepper *stepper = NULL;
     uint32_t eventualTargetSpeed; // the speed will change to after timeUntilSpeed seconds have elapsed
     unsigned long timeUntilSpeed; //the time we are supposed to change our speed in microseconds
-    bool speedToBeSet; // true if someone called goToSpeedAfterTime
+    bool speedToBeSet = false; // true if someone called goToSpeedAfterTime
     uint32_t targetSpeedMilliHz = 0; //save speed we want to decel to in steps/1000s (because the get speed function returns in steps per thousand seconds)
     long targetPos = 0; //keeps track of the targetPos disregarding padding
     long padding = 0;

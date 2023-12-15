@@ -70,7 +70,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //creating first instruction
     case(2):
-      cart.setBlocking(false);
       playing = false;
       cart.setStop(false);
       cart.reset();
@@ -98,9 +97,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //sending drive command
     case(5):
-      if (isTurning){
-        cart.setBlocking(true);
-      }
+      // if (isTurning){
+      //   cart.setBlocking(true);
+      // }
       cart.setStop(true);
       cart.moveTargetPosLinear(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
       isTurning = false;
@@ -110,9 +109,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 
     //sending turn command
     case(6):
-      if (!isTurning){
-        cart.setBlocking(true);
-      }
+      // if (!isTurning){
+      //   cart.setBlocking(true);
+      // }
       cart.setStop(true);
       cart.moveTargetPosTurn(abs(myData.currInstruction.movement), myData.currInstruction.movement > 0 ? 1: -1);
       isTurning = true;
@@ -123,6 +122,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
 }
 
 void setup(){
+  // delay(4000);
   Serial.begin(115200);
 
   // Set device as a Wi-Fi Station
@@ -137,6 +137,8 @@ void setup(){
   // Once ESPNow is successfully Init, we will register for recv CB to
   // get recv packer info
   esp_now_register_recv_cb(OnDataRecv);
+  cart.setStop(true);
+  // cart.moveTargetPosLinear(500, -1);
 }
 
 void loop(){
@@ -145,6 +147,9 @@ void loop(){
     if (currInstruction == numInstructions - 1){
       cart.setStop(true);
     }
+    Serial.println("instruction info");
+    Serial.println(instructions[currInstruction].mode);
+    Serial.println(instructions[currInstruction].movement);
     switch (instructions[currInstruction].mode){
       case(0):
         cart.moveLinear(abs(instructions[currInstruction].movement), instructions[currInstruction].movement > 0 ? 1: -1);

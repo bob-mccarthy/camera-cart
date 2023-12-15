@@ -30,7 +30,7 @@ class DecelStepper: public AccelStepper{
   private:
     unsigned int eventualTargetSpeed; // the speed will change to after 
     unsigned long timeUntilSpeed; //the time we are supposed to change our speed in microseconds
-    bool speedToBeSet; // true if someone called goToSpeedAfterTime
+    bool speedToBeSet = false; // true if someone called goToSpeedAfterTime
     unsigned int targetSpeed = 0; //save speed we want to decel to
     long targetPos = 0; //keeps track of the targetPos disregarding padding
     long padding = 0;
