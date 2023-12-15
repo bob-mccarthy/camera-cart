@@ -4,18 +4,21 @@ StepperCart::StepperCart(int dirPin1, int stepPin1, int enPin1, int dirPin2, int
                          unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius){
   accel = _accel;
   speed = _speed;
-  left = new FastDecelStepper(dirPin1, stepPin1, enPin1);
-  right = new FastDecelStepper(dirPin2, stepPin2, enPin2);
+  this->engine.init();
+  left = new FastDecelStepper(engine, dirPin1, stepPin1, enPin1);
+  right = new FastDecelStepper(engine, dirPin2, stepPin2, enPin2);
   left->setAcceleration(accel);
   right->setAcceleration(accel);
   left->setMaxSpeed(speed);
   right->setMaxSpeed(speed);
   axleLength = _axleLength;
-  paddingDistance = ((speed * speed) / (2 *(double)accel)) + 5000; 
+  paddingDistance = 0;
+  // paddingDistance = ((speed * speed) / (2 *(double)accel)) + 5000; 
   left->addPadding(paddingDistance);
   right->addPadding(paddingDistance);
   left->setCurrentPosition(0);
   right->setCurrentPosition(0);
+  
   wheelRadius = _wheelRadius;
   //number of steps per revolution divided by the circumference of the wheel
   //  a4988 need to be in 16 microstep mode
@@ -29,14 +32,16 @@ StepperCart::StepperCart(int dirPin1, int stepPin1, int enablePin1, int rxPin1, 
                          uint16_t microsteps){
   accel = _accel;
   speed = _speed;
-  left = new FastDecelStepper(dirPin1, stepPin1, enablePin1, rxPin1, txPin1, mySerial1, microsteps);
-  right = new FastDecelStepper(dirPin2, stepPin2, enablePin2, rxPin2, txPin2, mySerial2, microsteps);
+  this->engine.init();
+  left = new FastDecelStepper(engine, dirPin1, stepPin1, enablePin1, rxPin1, txPin1, mySerial1, microsteps);
+  right = new FastDecelStepper(engine, dirPin2, stepPin2, enablePin2, rxPin2, txPin2, mySerial2, microsteps);
   left->setAcceleration(accel);
   right->setAcceleration(accel);
   left->setMaxSpeed(speed);
   right->setMaxSpeed(speed);
   axleLength = _axleLength;
-  paddingDistance = ((speed * speed) / (2 *(double)accel)) + 5000; 
+  paddingDistance = 0;
+  // paddingDistance = ((speed * speed) / (2 *(double)accel)) + 5000; 
   left->addPadding(paddingDistance);
   right->addPadding(paddingDistance);
   left->setCurrentPosition(0);

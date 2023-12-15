@@ -3,11 +3,11 @@
 
 // #include "DecelStepper.h"
 #include "FastDecelStepper.h"
-
+#include <FastAccelStepper.h>
 class StepperCart
 {
   private:
-
+    FastAccelStepperEngine engine = FastAccelStepperEngine();
     FastDecelStepper *left;
     FastDecelStepper *right;
     FastDecelStepper *slower; //slower motor when turning on an arc
