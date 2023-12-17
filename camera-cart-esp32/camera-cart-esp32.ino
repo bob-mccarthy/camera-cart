@@ -147,9 +147,9 @@ void loop(){
     if (currInstruction == numInstructions - 1){
       cart.setStop(true);
     }
-    Serial.println("instruction info");
-    Serial.println(instructions[currInstruction].mode);
-    Serial.println(instructions[currInstruction].movement);
+    // Serial.println("instruction info");
+    // Serial.println(instructions[currInstruction].mode);
+    // Serial.println(instructions[currInstruction].movement);
     switch (instructions[currInstruction].mode){
       case(0):
         cart.moveLinear(abs(instructions[currInstruction].movement), instructions[currInstruction].movement > 0 ? 1: -1);
