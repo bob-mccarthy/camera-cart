@@ -35,8 +35,6 @@ FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPi
   this->stepper->setEnablePin(enablePin);
   this->stepper->setAutoEnable(false);
   digitalWrite(enablePin, LOW);
-
-  // stepper->moveTo(0, true);
 }
 
 void FastDecelStepper::setMaxSpeed(long maxSpeed){
@@ -48,16 +46,17 @@ void FastDecelStepper::setAcceleration(long acceleration){
 }
 
 void FastDecelStepper::setCurrentPosition(long position){
-  Serial.println("Resetting Position: ");
-  Serial.println(this->stepper->getCurrentPosition());
+  // Serial.println("Resetting Position: ");
+  // Serial.println(this->stepper->getCurrentPosition());
   this->stepper->setCurrentPosition(position);
-  Serial.println(this->stepper->getCurrentPosition());
+  // Serial.println(this->stepper->getCurrentPosition());
 }
 
 void FastDecelStepper::goToSpeed(uint32_t speed){
   unsigned int currSpeed = this->stepper->getCurrentSpeedInMilliHz()/1000;
   if ( currSpeed > speed){
     this->targetSpeedMilliHz = speed * 1000;
+    delay(5); // you need a slight delay, because if you call stopMove directly after calling one of the moveTo functions it won't stop
     this->stepper->stopMove();
     this->decel = true;
   }
@@ -85,13 +84,13 @@ void FastDecelStepper::moveTo(long position){
 
 void FastDecelStepper::move(long position){
   this->targetPos = this->stepper->getCurrentPosition() + position;
-  Serial.print("current position: ");
-  Serial.println(this->stepper->getCurrentPosition());
-  Serial.print("target position: ");
-  Serial.println(this->targetPos);
-  Serial.print("current speed: ");
-  Serial.println(this->stepper->getCurrentSpeedInMilliHz()/1000);
-  Serial.println();
+  // Serial.print("current position: ");
+  // Serial.println(this->stepper->getCurrentPosition());
+  // Serial.print("target position: ");
+  // Serial.println(this->targetPos);
+  // Serial.print("current speed: ");
+  // Serial.println(this->stepper->getCurrentSpeedInMilliHz()/1000);
+  // Serial.println();
   this->stepper->moveTo(this->targetPos + this->padding, this->isBlocking);
   
 }
@@ -119,9 +118,9 @@ void FastDecelStepper::addPadding(long _padding){
 void FastDecelStepper::run(){
   //checking if we are currently decelerating we have reached our target speed
   if (decel && (this->stepper->getCurrentSpeedInMilliHz()) <= this->targetSpeedMilliHz){  
-    Serial.print("Decelling to target speed of : ") ; 
-    Serial.println(this->targetSpeedMilliHz/1000);
-    Serial.print("Actual Speed : ") ; 
+    // Serial.print("Decelling to target speed of : ") ; 
+    // Serial.println(this->targetSpeedMilliHz/1000);
+    // Serial.print("Actual Speed : ") ; 
     Serial.println(this->stepper->getCurrentSpeedInMilliHz()/1000);
     this->setMaxSpeed(this->targetSpeedMilliHz/1000);//convert speed back to steps per second
     this->moveTo(targetPos);
@@ -129,8 +128,8 @@ void FastDecelStepper::run(){
   }
   //checking if the proper amount of time had elapsed since goToSpeedAfterTime was called
   if (speedToBeSet && micros() >= timeUntilSpeed){
-    Serial.print("Accelerating to target speed of : ") ; 
-    Serial.println(this->eventualTargetSpeed);
+    // Serial.print("Accelerating to target speed of : ") ; 
+    // Serial.println(this->eventualTargetSpeed);
     this->goToSpeed(this->eventualTargetSpeed);
     this->speedToBeSet = false;
   }
