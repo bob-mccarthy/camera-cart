@@ -58,7 +58,12 @@ void DecelStepper::moveTo(long position){
 }
 
 void DecelStepper::move(long position){
+  
+  Serial.print("current speed: ");
+  Serial.println(this->speed());
   targetPos = this->AccelStepper::currentPosition() + position;
+  Serial.print("targetPosition: ");
+  Serial.println(targetPos);
   if(!needsFinish){
     this->AccelStepper::moveTo(targetPos + padding);
   }
@@ -94,12 +99,18 @@ void DecelStepper::addPadding(long _padding){
 void DecelStepper::run(){
   //checking if we are currently decelerating we have reached our target speed
   if (decel && this->speed() <= targetSpeed){    
+    Serial.println(targetSpeed);
     this->setMaxSpeed(targetSpeed);
     this->moveTo(targetPos);
     decel = false;
   }
   //checking if the proper amount of time had elapsed since goToSpeedAfterTime was called
   if (speedToBeSet && micros() >= timeUntilSpeed){
+    Serial.print("Accelerating to: ");
+    Serial.println(this->eventualTargetSpeed);
+    Serial.print("current speed: ");
+    Serial.println(this->speed());
+    
     this->goToSpeed(eventualTargetSpeed);
     speedToBeSet = false;
 
