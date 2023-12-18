@@ -1,17 +1,26 @@
 #include "FastDecelStepper.h"
 
-FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t  dirPin, uint8_t stepPin, uint8_t enablePin){
-  pinMode(enablePin, OUTPUT);
+FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t  dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t microsteps){
   this->stepper = engine.stepperConnectToPin(stepPin);
   this->stepper->setDirectionPin(dirPin);
   this->stepper->setEnablePin(enablePin);
   this->stepper->setAutoEnable(false);
-  digitalWrite(enablePin, LOW);
+  clicksToSteps = (microsteps * 200) / 1000; // steps per revolution / encoder clicks for revolution
+  this->encoderAttached = false;
+}
+
+FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t microsteps, int8_t _pinA, int8_t _pinB){
+  this->stepper = engine.stepperConnectToPin(stepPin);
+  this->stepper->setDirectionPin(dirPin);
+  this->stepper->setEnablePin(enablePin);
+  this->stepper->setAutoEnable(false);
+  clicksToSteps = (microsteps * 200) / 1000; // steps per revolution / encoder clicks for revolution
+  this->pinA = _pinA;
+  this->pinB = _pinB;
+  this->encoderAttached = true;
 }
 
 FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t rxPin, uint8_t txPin, HardwareSerial& mySerial, uint16_t microsteps){
-  pinMode(enablePin, OUTPUT);
-  // digitalWrite(enablePin, HIGH);
 
   TMC2209Stepper driver(&mySerial, R_SENSE, DRIVER_ADDRESS);
   mySerial.begin(115200, SERIAL_8N1, rxPin, txPin);
@@ -29,12 +38,14 @@ FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPi
   driver.pdn_disable(true); // Enable UART control
   driver.VACTUAL(0); // Enable UART control
   driver.rms_current(SET_CURRENT);
+
+  clicksToSteps = (microsteps * 200) / 1000; // steps per revolution / encoder clicks for revolution
   
   this->stepper = engine.stepperConnectToPin(stepPin);
   this->stepper->setDirectionPin(dirPin);
   this->stepper->setEnablePin(enablePin);
   this->stepper->setAutoEnable(false);
-  digitalWrite(enablePin, LOW);
+  this->encoderAttached = true;
 }
 
 void FastDecelStepper::setMaxSpeed(long maxSpeed){
@@ -84,13 +95,6 @@ void FastDecelStepper::moveTo(long position){
 
 void FastDecelStepper::move(long position){
   this->targetPos = this->stepper->getCurrentPosition() + position;
-  // Serial.print("current position: ");
-  // Serial.println(this->stepper->getCurrentPosition());
-  // Serial.print("target position: ");
-  // Serial.println(this->targetPos);
-  // Serial.print("current speed: ");
-  // Serial.println(this->stepper->getCurrentSpeedInMilliHz()/1000);
-  // Serial.println();
   this->stepper->moveTo(this->targetPos + this->padding, this->isBlocking);
   
 }
@@ -106,21 +110,35 @@ void FastDecelStepper::setBlocking(bool _isBlocking){
 }
 
 
+
 void FastDecelStepper::resetPos(){
   this->targetPos = 0;
   this->setCurrentPosition(0);
+  this->encoderClicks = 0;
 }
 
 void FastDecelStepper::addPadding(long _padding){
   this->padding = _padding;
 }
 
+// void FastDecelStepper::attachEncoder(int8_t _pinA, int8_t _pinB){
+  
+//   attachInterrupt(digitalPinToInterrupt(this->pinA), std::bind(&this->readEncoder, this), RISING);
+// }
+
+void FastDecelStepper::readEncoder(){
+  //if pinB of the motor is HIGH then we moved CW, otherwise we moved CCW
+  if (digitalRead(this->pinB) ==HIGH){
+    this->encoderClicks++;
+  }
+  else{
+    this->encoderClicks--;
+  }
+}
+
 void FastDecelStepper::run(){
   //checking if we are currently decelerating we have reached our target speed
   if (decel && (this->stepper->getCurrentSpeedInMilliHz()) <= this->targetSpeedMilliHz){  
-    // Serial.print("Decelling to target speed of : ") ; 
-    // Serial.println(this->targetSpeedMilliHz/1000);
-    // Serial.print("Actual Speed : ") ; 
     Serial.println(this->stepper->getCurrentSpeedInMilliHz()/1000);
     this->setMaxSpeed(this->targetSpeedMilliHz/1000);//convert speed back to steps per second
     this->moveTo(targetPos);
@@ -128,10 +146,14 @@ void FastDecelStepper::run(){
   }
   //checking if the proper amount of time had elapsed since goToSpeedAfterTime was called
   if (speedToBeSet && micros() >= timeUntilSpeed){
-    // Serial.print("Accelerating to target speed of : ") ; 
-    // Serial.println(this->eventualTargetSpeed);
     this->goToSpeed(this->eventualTargetSpeed);
     this->speedToBeSet = false;
+  }
+
+  if(this->encoderAttached && (abs(this->stepper->getCurrentPosition() - this->encoderClicks * this->clicksToSteps + this->accountedSteps) > clicksToSteps)){
+    uint32_t diff = this->stepper->getCurrentPosition() - this->encoderClicks * this->clicksToSteps + this->accountedSteps;
+    this->accountedSteps += diff;
+    this->moveTargetPos(diff);
   }
 
 }

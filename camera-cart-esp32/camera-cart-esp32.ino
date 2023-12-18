@@ -42,9 +42,26 @@ const uint16_t MICROSTEPS = 16;
 
 const int WHEEL_RADIUS = 40;
 
+const int LEFT_PINA = 8;
+const int LEFT_PINB = 9;
+
+const int RIGHT_PINA = 2;
+const int RIGHT_PINB = 4;
+
 HardwareSerial SerialPort(1);
-// StepperCart cart(19, 18, 12, 14, 2000, 2000, 290, 40);
-StepperCart cart(14, 15,27, 16, 17, Serial2, 19, 18, 5, 4, 2, SerialPort, BASE_ACCEL, BASE_SPEED, AXLE_LENGTH, WHEEL_RADIUS, MICROSTEPS);
+
+//initialized for TMC cart
+// StepperCart cart(14, 15,27, 16, 17, Serial2, 19, 18, 5, 4, 2, SerialPort, BASE_ACCEL, BASE_SPEED, AXLE_LENGTH, WHEEL_RADIUS, MICROSTEPS);
+
+StepperCart cart(14, 15,27, LEFT_PINA, LEFT_PINB, 19, 18, 5, RIGHT_PINA, RIGHT_PINB, BASE_ACCEL, BASE_SPEED, AXLE_LENGTH, WHEEL_RADIUS, MICROSTEPS);
+
+void IRAM_ATTR readLeftEncoder(){
+  cart.handleLeftMotorInterrupt();
+}
+
+void IRAM_ATTR readRightEncoder(){
+  cart.handleRightMotorInterrupt();
+}
 
 //used to check if we are playing preset instructions and which one we are on
 bool playing = false;
@@ -139,6 +156,9 @@ void setup(){
   esp_now_register_recv_cb(OnDataRecv);
   cart.setStop(true);
   // cart.moveTargetPosLinear(500, -1);
+
+  attachInterrupt(digitalPinToInterrupt(RIGHT_PINA),  readRightEncoder, RISING);
+  attachInterrupt(digitalPinToInterrupt(LEFT_PINA), readLeftEncoder, RISING);
 }
 
 void loop(){

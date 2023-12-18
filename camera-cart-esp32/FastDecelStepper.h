@@ -4,6 +4,7 @@
 #include <HardwareSerial.h>
 #include <TMCStepper.h>
 #include <SPI.h>
+#include <FunctionalInterrupt.h>
 
 #define R_SENSE          0.10f      // R_SENSE for current calc.
 #define DRIVER_ADDRESS   0b00       // TMC2209 Driver address according to MS1 and MS2
@@ -14,7 +15,8 @@ const int  SET_CURRENT = 600;
 
 class FastDecelStepper{
   public:
-    FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin);
+    FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t microsteps);
+    FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t microsteps, int8_t _pinA, int8_t _pinB);
     FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t rxPin, uint8_t txPin, HardwareSerial& mySerial, uint16_t microsteps); //initialize FastDecelStepper with TMC
     void setMaxSpeed(long maxSpeed);//sets the maxSpeed of the motor in steps per second 
     void setAcceleration(long acceleration); //sets the acceleration of the motor in steps per second per second
@@ -31,9 +33,16 @@ class FastDecelStepper{
     void resetPos(); //set current and target position back to 0
     void addPadding(long _padding); // adds additional steps to all of your move instructions that is not reflected in the targetPos;
     bool done();
+    // void attachEncoder(int8_t pinA, int8_t pinB);//initializes encoder and uses interrupt 
+    void readEncoder();
     
   private:
     FastAccelStepper *stepper = NULL;
+    int32_t encoderClicks = 0;
+    int32_t clicksToSteps;
+    int32_t accountedSteps = 0; //additional steps to get from 
+    int8_t pinA, pinB;
+    bool encoderAttached = false;
     uint32_t eventualTargetSpeed; // the speed will change to after timeUntilSpeed seconds have elapsed
     unsigned long timeUntilSpeed; //the time we are supposed to change our speed in microseconds
     bool speedToBeSet = false; // true if someone called goToSpeedAfterTime

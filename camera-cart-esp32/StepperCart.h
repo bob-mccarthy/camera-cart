@@ -28,7 +28,7 @@ class StepperCart
     
   public:
     //initialize stepper cart with a4988 motor drivers
-    StepperCart(int dirPin1, int stepPin1, int enPin1, int dirPin2, int stepPin2, int enPin2, unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius);
+    StepperCart(int dirPin1, int stepPin1, int enPin1, int pinA1, int pinB1, int dirPin2, int stepPin2, int enPin2, int pinA2, int pinB2, unsigned long _accel, unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius, uint16_t microsteps);
     //initialize stepper cart with tmc motor drivers
     StepperCart(int dirPin1, int stepPin1, int enablePin1, int rxPin1, int txPin1, HardwareSerial& mySerial1, 
                 int dirPin2, int stepPin2, int enablePin2, int rxPin2, int txPin2, HardwareSerial& mySerial2, 
@@ -44,6 +44,8 @@ class StepperCart
     bool done();//returns if the motors have finsihed their previous instruction
     void reset(); //resets all the positions of the stepper motors 
     void setBlocking(bool isBlocking); // if isBlocking is true then the cart waits til each instruction finishes before executing the next one
+    void handleRightMotorInterrupt();
+    void handleLeftMotorInterrupt();
 
 
 };
