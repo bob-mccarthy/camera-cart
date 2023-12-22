@@ -235,11 +235,6 @@ class MainWindow(QtWidgets.QMainWindow):
         painter.drawLine(self.xLst[-1],self.yLst[-1], currX, currY)
       self.update()
     
-    # def closeEvent(self, e):
-        # this will end the serial monitor
-        # self.stop = False
-        # self.t1.join()
-        # e.accept()
         
         
 
