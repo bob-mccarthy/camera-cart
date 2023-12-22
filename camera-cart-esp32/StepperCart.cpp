@@ -1,12 +1,12 @@
 #include "StepperCart.h"
 
-StepperCart::StepperCart(int dirPin1, int stepPin1, int enPin1,int pinA1, int pinB1, int dirPin2, int stepPin2,int enPin2, int pinA2, int pinB2, unsigned long _accel, 
+StepperCart::StepperCart(int dirPin1, int stepPin1, int enPin1, int dirPin2, int stepPin2,int enPin2, unsigned long _accel, 
                          unsigned long _speed, unsigned int _axleLength, unsigned int _wheelRadius, uint16_t microsteps){
   accel = _accel;
   speed = _speed;
   this->engine.init();
-  left = new FastDecelStepper(engine, dirPin1, stepPin1, enPin1, microsteps, pinA1, pinB1);
-  right = new FastDecelStepper(engine, dirPin2, stepPin2, enPin2, microsteps, pinA2, pinB2);
+  left = new FastDecelStepper(engine, dirPin1, stepPin1, enPin1, microsteps);
+  right = new FastDecelStepper(engine, dirPin2, stepPin2, enPin2, microsteps);
   left->setAcceleration(accel);
   right->setAcceleration(accel);
   left->setMaxSpeed(speed);
@@ -100,13 +100,6 @@ void StepperCart::turn(unsigned int degrees, int direction){
   right->move(-1*totalSteps/2.0*direction);
 }
 
-void StepperCart::handleLeftMotorInterrupt(){
-  left->readEncoder();
-}
-
-void StepperCart::handleRightMotorInterrupt(){
-  right->readEncoder();
-}
 
 void StepperCart::moveTargetPosTurn(unsigned int degrees, int direction){
   //amount of millimeters on the circumference needs to turn degrees amount of degrees
@@ -120,6 +113,11 @@ void StepperCart::moveTargetPosTurn(unsigned int degrees, int direction){
 void StepperCart::setBlocking(bool isBlocking){
   left->setBlocking(isBlocking);
   right->setBlocking(isBlocking);
+}
+
+void StepperCart::runEncoder(int32_t leftEncoderClicks, int32_t rightEncoderClicks){
+  left->runEncoder(leftEncoderClicks);
+  right->runEncoder(rightEncoderClicks);
 }
 
 void StepperCart::run(){

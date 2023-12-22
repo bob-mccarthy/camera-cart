@@ -1,5 +1,5 @@
 #include "FastDecelStepper.h"
-
+bool notPrinted = true;
 FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t  dirPin, uint8_t stepPin, uint8_t enablePin, uint8_t microsteps){
   this->stepper = engine.stepperConnectToPin(stepPin);
   this->stepper->setDirectionPin(dirPin);
@@ -28,7 +28,7 @@ FastDecelStepper::FastDecelStepper(FastAccelStepperEngine& engine, uint8_t dirPi
   driver.VACTUAL(0); // Enable UART control
   driver.rms_current(SET_CURRENT);
 
-  clicksToSteps = (microsteps * 200) / 1000.0; // steps per revolution / encoder clicks for revolution
+  clicksToSteps = (microsteps * 200) / 1000; // steps per revolution / encoder clicks for revolution
   
   this->stepper = engine.stepperConnectToPin(stepPin);
   this->stepper->setDirectionPin(dirPin);
@@ -114,7 +114,6 @@ void FastDecelStepper::addPadding(long _padding){
 // }
 
 
-
 void FastDecelStepper::run(){
   //checking if we are currently decelerating we have reached our target speed
   if (decel && (this->stepper->getCurrentSpeedInMilliHz()) <= this->targetSpeedMilliHz){  
@@ -144,11 +143,22 @@ void FastDecelStepper::runEncoder(int32_t encoderClicks){
     this->goToSpeed(this->eventualTargetSpeed);
     this->speedToBeSet = false;
   }
-
+  if(this->done()&& notPrinted){
+    notPrinted = false;
+    Serial.print("cuurent position: ");
+    Serial.println(this->stepper->getCurrentPosition());
+    Serial.print("clicksToSteps: ");
+    Serial.println(this->clicksToSteps);
+    Serial.print("accountedSteps: ");
+    Serial.println(this->accountedSteps);
+    Serial.print("encoderClicks: ");
+    Serial.println(encoderClicks);
+  }
   if((abs(this->stepper->getCurrentPosition() - (encoderClicks * this->clicksToSteps + this->accountedSteps)) > clicksToSteps)){
-    uint32_t diff = this->stepper->getCurrentPosition() - (encoderClicks * this->clicksToSteps + this->accountedSteps);
+    int32_t diff = this->stepper->getCurrentPosition() - (encoderClicks * this->clicksToSteps + this->accountedSteps);
     this->accountedSteps += diff;
     this->moveTargetPos(diff);
+    
   }
 
 }

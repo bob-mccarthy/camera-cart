@@ -55,12 +55,26 @@ HardwareSerial SerialPort(1);
 
 StepperCart cart(14, 15,27, LEFT_PINA, LEFT_PINB, 19, 18, 5, RIGHT_PINA, RIGHT_PINB, BASE_ACCEL, BASE_SPEED, AXLE_LENGTH, WHEEL_RADIUS, MICROSTEPS);
 
+volatile int leftEncoderClicks = 0;
 void IRAM_ATTR readLeftEncoder(){
-  cart.handleLeftMotorInterrupt();
+  int b = digitalRead(LEFT_PINB);
+  if (b ==HIGH){
+    leftEncoderClicks++;
+  }
+  else{
+    leftEncoderClicks--;
+  }
 }
 
+volatile int rightEncoderClicks = 0;
 void IRAM_ATTR readRightEncoder(){
-  cart.handleRightMotorInterrupt();
+  int b = digitalRead(RIGHT_PINB);
+  if (b ==HIGH){
+    rightEncoderClicks++;
+  }
+  else{
+    rightEncoderClicks--;
+  }
 }
 
 //used to check if we are playing preset instructions and which one we are on
@@ -90,6 +104,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
       playing = false;
       cart.setStop(false);
       cart.reset();
+      leftEncoderClicks = 0;
+      rightEncoderClicks = 0;
       currInstruction = -1;
       instructions[0] = myData.currInstruction;
       numInstructions = 1;
@@ -202,7 +218,7 @@ void loop(){
     }
   }
   if((playing && currInstruction != -1) || drivingMode){
-    cart.run();
+    cart.run(leftEncoderClicks, rightEncoderClicks);
   }
   
 }

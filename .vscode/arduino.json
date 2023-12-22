@@ -2,5 +2,5 @@
     "board": "esp32:esp32:esp32",
     "output": "../build",
     "port": "/dev/tty.usbserial-0001",
-    "sketch": "camera-cart-esp32/camera-cart-esp32.ino"
+    "sketch": "simple-encoder-test/simple-encoder-test.ino"
 }

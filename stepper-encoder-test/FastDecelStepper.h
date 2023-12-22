@@ -4,7 +4,6 @@
 #include <HardwareSerial.h>
 #include <TMCStepper.h>
 #include <SPI.h>
-#include <FunctionalInterrupt.h>
 
 #define R_SENSE          0.10f      // R_SENSE for current calc.
 #define DRIVER_ADDRESS   0b00       // TMC2209 Driver address according to MS1 and MS2

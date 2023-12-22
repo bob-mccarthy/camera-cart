@@ -39,13 +39,11 @@ class StepperCart
     void turnArc(unsigned int slowerSpeed, unsigned long accelTime, long slowerDist, long fasterDist, int direction); // faster implementation of turn arc
     void turn(unsigned int degrees, int direction); //turn in place defined by degrees in direction (-1:CCW, 1: CW)
     void moveTargetPosTurn(unsigned int degrees, int direction); // turn in place, but if we are currently turning it will add this turn onto the end of the previous one
-    void run(); //steps the step motors if a step is due
+    void run(int32_t leftEncoderClicks, int32_t rightEncoderClicks); //steps the step motors if a step is due
     void setStop(bool _stop);//set if the motors will stop after this last instruction
     bool done();//returns if the motors have finsihed their previous instruction
     void reset(); //resets all the positions of the stepper motors 
     void setBlocking(bool isBlocking); // if isBlocking is true then the cart waits til each instruction finishes before executing the next one
-    void handleRightMotorInterrupt();
-    void handleLeftMotorInterrupt();
 
 
 };
